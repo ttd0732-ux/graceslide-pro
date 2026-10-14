@@ -1,0 +1,1805 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <!-- Open Graph (카카오톡 공유 미리보기) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="그레이스슬라이드 프로">
+  <meta property="og:description" content="설교 PPT를 AI로 쉽게 · 성경구절 자동 추출">
+  <meta property="og:image" content="https://graceslide-pro.vercel.app/og-image.jpg">
+  <meta property="og:url" content="https://graceslide-pro.vercel.app/">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GraceSlide AI - 스마트 설교 PPT & 성경 구절 자동 생성기</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- PptxGenJS for PowerPoint export -->
+  <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+
+  <!-- Google Fonts: Cinzel, Noto Sans KR, Noto Serif KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@400;600;700;900&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Noto Sans KR', 'sans-serif'],
+            serif: ['Noto Serif KR', 'serif'],
+            cinzel: ['Cinzel', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom scrollbar - light theme */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(241, 245, 249, 0.8); }
+    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.5); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.8); }
+
+    .aspect-slide { aspect-ratio: 16 / 9; }
+
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans" style="background:#e7ede6;color:#173d34" selection:bg-amber-500/30 selection:text-amber-200">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-40" style="background:#f6f8f1;border-bottom:1px solid #cfdbce" px-4 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between shadow-md shadow-slate-200/60 gap-3">
+    <!-- Logo & Title -->
+    <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-start">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#24664e] to-[#173d34] flex items-center justify-center shadow-lg shadow-amber-900/30 ring-1 ring-amber-400/40">
+          <i data-lucide="presentation" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight" style="color:#173d34" flex items-center gap-2">
+            GraceSlide <span class="text-xs px-2 py-0.5 rounded-md bg-[#e9f0e4] text-[#24664e] border border-[#24664e]/30 font-semibold tracking-wide">PRO</span>
+            <span class="text-xs text-slate-400 font-normal">v1.0</span>
+          </h1>
+          <p class="text-xs text-slate-500 hidden sm:block">성경 구절 자동 분할 · 핵심 문장 AI 실사 이미지 · PPT 자동 생성</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+      <!-- API Key Input & Verify -->
+      <div class="flex items-center gap-2 bg-slate-200/80 p-1.5 rounded-lg border border-slate-300 shadow-inner group transition-all" title="Google AI Studio(aistudio.google.com)에서 무료로 발급받은 Gemini API 키를 입력하세요. 키는 이 브라우저에만 저장됩니다.">
+        <i data-lucide="key" class="w-4 h-4 text-slate-500 ml-1 hidden sm:block"></i>
+        <input type="password" id="api-key-input" placeholder="Gemini API 키 입력" class="bg-transparent border-none text-xs text-slate-900 focus:outline-none w-32 sm:w-44 placeholder-slate-400">
+        
+        <button id="btn-verify-api" class="text-xs px-2.5 py-1.5 rounded bg-[#d97b3c] hover:bg-[#c06a2f] active:scale-95 text-white font-semibold transition whitespace-nowrap shadow-md">
+          키 확인
+        </button>
+
+        <div id="api-status-badge" class="flex items-center gap-1.5 px-2 py-1 rounded bg-white border border-slate-700 text-xs font-medium text-slate-500 min-w-[75px] justify-center transition-colors">
+          <span class="w-2 h-2 rounded-full bg-slate-500" id="api-status-dot"></span>
+          <span id="api-status-text">미확인</span>
+        </div>
+      </div>
+
+      <button id="btn-help" class="text-xs px-3 py-2.5 rounded-lg bg-white hover:bg-amber-50 text-slate-700 hover:text-amber-700 border border-slate-300 transition flex items-center gap-1.5 font-medium">
+        <i data-lucide="circle-help" class="w-4 h-4"></i> 사용법
+      </button>
+
+      <button id="btn-load-sample" class="text-xs px-3 py-2.5 rounded-lg bg-slate-200/80 hover:bg-slate-300 text-slate-700 hover:text-slate-900 border border-slate-300 transition flex items-center gap-1.5 font-medium">
+        <i data-lucide="file-text" class="w-4 h-4"></i> 샘플 채우기
+      </button>
+
+      <button id="btn-export-pptx" class="text-xs sm:text-sm px-4 py-2.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold shadow-md shadow-amber-900/40 transition flex items-center gap-2">
+        <i data-lucide="download-cloud" class="w-4 h-4"></i>
+        <span>PPTX 다운로드</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5 p-4 lg:p-6 max-w-[1780px] mx-auto w-full">
+    
+    <!-- Left Column (5 cols) : Inputs -->
+    <div class="lg:col-span-5 flex flex-col space-y-6">
+      
+      <!-- Sermon Metadata -->
+      <div class="glass-panel p-6 rounded-2xl border-2 border-slate-300 shadow-md bg-white">
+        <h2 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <i data-lucide="info" class="w-5 h-5 text-[#24664e]"></i> 설교 기본 정보 (타이틀 슬라이드용)
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">설교 제목</label>
+            <input type="text" id="sermon-title" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-base text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all" placeholder="예: 탕자의 비유" value="">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">설교자 / 소속</label>
+            <input type="text" id="sermon-speaker" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-base text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all" placeholder="예: 김목사 | 행복교회" value="">
+          </div>
+        </div>
+      </div>
+
+      <!-- Scripture Extractor -->
+      <div class="p-6 rounded-2xl shadow-md flex flex-col flex-grow min-h-[300px]" style="background:#fdf6ec;border:2px solid #e5c768">
+        <label class="text-base font-bold text-slate-800 flex items-center gap-2 mb-3">
+          <i data-lucide="book-open" class="w-5 h-5 text-[#d97b3c]"></i> 설교 교안 본문 (성경구절 자동 추출)
+        </label>
+        <p class="text-sm text-slate-600 mb-3 leading-relaxed">
+          설교 원고를 그대로 붙여넣으세요. AI가 문맥을 파악해 성경 구절만 쏙쏙 뽑아 슬라이드로 자동 분할해 줍니다.
+        </p>
+        <textarea id="sermon-content" class="w-full flex-1 bg-white border border-amber-300 rounded-xl p-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none leading-relaxed" placeholder="여기에 설교 텍스트를 붙여넣으세요..."></textarea>
+
+        <div class="mt-4">
+          <button id="btn-parse-scriptures" class="w-full py-4 px-4 rounded-xl bg-[#d97b3c] hover:bg-[#c06a2f] active:scale-[0.99] text-white font-bold text-base shadow-md transition flex items-center justify-center gap-2">
+            <i data-lucide="loader-2" class="w-5 h-5 animate-spin hidden" id="parse-spinner"></i>
+            <i data-lucide="sparkles" class="w-5 h-5" id="parse-icon"></i>
+            <span id="parse-btn-text">성경구절 전용 자동 추출 & 슬라이드 생성</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column (7 cols) : Preview & Output -->
+    <div class="lg:col-span-7 flex flex-col space-y-6">
+      
+      <!-- Toolbar -->
+      <div class="p-3.5 rounded-2xl shadow-md flex flex-wrap items-center justify-between gap-3" style="background:#fbfcf6;border:2px solid #d8e2d7">
+        <div class="flex items-center gap-3">
+          <label class="text-xs font-semibold text-slate-700 whitespace-nowrap">전체 테마 색상:</label>
+          <select id="theme-selector" class="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-amber-300 font-semibold focus:outline-none cursor-pointer"></select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <label class="text-xs font-semibold text-slate-700 whitespace-nowrap">화면 비율:</label>
+          <select id="aspect-selector" class="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none cursor-pointer">
+            <option value="16x9" selected>16:9 (와이드)</option>
+            <option value="4x3">4:3 (일반)</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <label class="text-xs font-semibold text-slate-700 whitespace-nowrap">성경 폰트:</label>
+          <select id="font-selector" class="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none cursor-pointer">
+            <option value="Noto Serif KR" selected>명조 (기본)</option>
+            <option value="Noto Sans KR">고딕</option>
+            <option value="Nanum Myeongjo">나눔명조</option>
+            <option value="Nanum Gothic">나눔고딕</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-1">
+          <label class="text-xs font-semibold text-slate-700 whitespace-nowrap mr-1">정렬:</label>
+          <button id="btn-align-left" class="p-1.5 rounded-lg bg-white hover:bg-amber-500 hover:text-white text-slate-600 border border-slate-200 transition-colors" title="왼쪽 정렬"><i data-lucide="align-left" class="w-4 h-4"></i></button>
+          <button id="btn-align-center" class="p-1.5 rounded-lg bg-amber-500 text-white border border-amber-500 transition-colors" title="가운데 정렬"><i data-lucide="align-center" class="w-4 h-4"></i></button>
+          <button id="btn-align-right" class="p-1.5 rounded-lg bg-white hover:bg-amber-500 hover:text-white text-slate-600 border border-slate-200 transition-colors" title="오른쪽 정렬"><i data-lucide="align-right" class="w-4 h-4"></i></button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <label class="text-xs font-semibold text-slate-700 whitespace-nowrap">성경 레이아웃:</label>
+          <select id="scripture-layout-selector" class="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none cursor-pointer">
+            <option value="full" selected>전체 텍스트 (100%)</option>
+            <option value="left_text">왼쪽 텍스트 + 오른쪽 이미지칸</option>
+            <option value="right_text">왼쪽 이미지칸 + 오른쪽 텍스트</option>
+          </select>
+        </div>
+
+        <div class="flex items-center space-x-3 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-800">
+          <button id="btn-undo" class="p-1.5 rounded-lg bg-white hover:bg-amber-500 hover:text-white text-slate-600 border border-slate-200 transition-colors disabled:opacity-40" title="실행 취소 (Ctrl+Z)"><i data-lucide="undo-2" class="w-4 h-4"></i></button>
+          <button id="btn-redo" class="p-1.5 rounded-lg bg-white hover:bg-amber-500 hover:text-white text-slate-600 border border-slate-200 transition-colors disabled:opacity-40" title="다시 실행 (Ctrl+Y)"><i data-lucide="redo-2" class="w-4 h-4"></i></button>
+          <div class="w-px h-5 bg-slate-700"></div>
+          <button id="btn-font-smaller" class="p-1.5 rounded-lg bg-white hover:bg-amber-500 hover:text-white text-slate-600 border border-slate-200 transition-colors" title="글자 작게"><i data-lucide="a-large-small" class="w-4 h-4"></i></button>
+          <button id="btn-font-bigger" class="p-1.5 rounded-lg bg-white hover:bg-amber-500 hover:text-white text-slate-600 border border-slate-200 transition-colors" title="글자 크게"><i data-lucide="case-sensitive" class="w-4 h-4"></i></button>
+          <div class="w-px h-5 bg-slate-700"></div>
+          <button id="btn-export-pdf" class="p-1.5 rounded-lg bg-white hover:bg-amber-500 hover:text-white text-slate-600 border border-slate-200 transition-colors" title="PDF로 저장"><i data-lucide="file-text" class="w-4 h-4"></i></button>
+          <div class="w-px h-5 bg-slate-700"></div>
+          <span class="text-xs text-slate-700 font-medium font-mono w-24 text-center" id="slide-counter">1 / 1 슬라이드</span>
+          <div class="flex items-center gap-1 border-l border-slate-700 pl-2">
+            <button id="btn-prev-slide" class="p-1.5 rounded-lg bg-white hover:bg-amber-500 hover:text-white text-slate-600 border border-slate-200 transition-colors" title="이전 슬라이드"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+            <button id="btn-next-slide" class="p-1.5 rounded-lg bg-white hover:bg-amber-500 hover:text-white text-slate-600 border border-slate-200 transition-colors" title="다음 슬라이드"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide Stage -->
+      <div class="p-3 rounded-2xl shadow-xl relative flex-grow" style="background:#dfe7d8;border:2px solid #9bb091">
+        <div id="slide-stage" class="aspect-slide w-full rounded-xl overflow-hidden shadow-2xl relative flex flex-col justify-center items-center text-center select-none transition-all duration-300 group">
+          <div id="stage-inner" class="w-full h-full flex flex-col justify-center items-center relative z-10"></div>
+          <div id="stage-bg-overlay" class="absolute inset-0 z-0 hidden pointer-events-none transition-colors duration-500"></div>
+          
+          <!-- Hover Actions for Image Download -->
+          <div class="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+             <button id="btn-download-single-image" class="bg-black/60 hover:bg-amber-600 text-white backdrop-blur-md px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 border border-white/10 shadow-lg">
+                <i data-lucide="image-down" class="w-4 h-4"></i>
+                현재 슬라이드 이미지로 저장
+             </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thumbnail Deck with Drag & Drop -->
+      <div class="p-6 rounded-2xl shadow-md" style="background:#fbfcf6;border:2px solid #d8e2d7">
+        <div class="flex items-center justify-between mb-3 border-b border-indigo-200 pb-2">
+          <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+            <i data-lucide="layers" class="w-4 h-4"></i> 슬라이드 구성 목록 <span class="text-slate-500 font-normal">(드래그하여 순서 변경)</span>
+          </h3>
+          <button id="btn-clear-slides" class="text-xs px-2.5 py-1.5 rounded-lg bg-red-950/40 hover:bg-red-900 text-red-400 border border-red-900/50 transition flex items-center gap-1">
+             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 전체 초기화
+          </button>
+        </div>
+        <div id="slides-thumbnail-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-[220px] overflow-y-auto p-1 custom-scrollbar"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Help Modal -->
+  <div id="help-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <i data-lucide="book-open" class="w-5 h-5 text-[#d97b3c]"></i> GraceSlide 사용법
+        </h2>
+        <button id="btn-close-help" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div class="space-y-5 text-sm text-slate-700">
+        <div>
+          <h3 class="font-bold text-slate-900 mb-2 flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-amber-500 text-white text-xs flex items-center justify-center font-bold">1</span> API 키 입력 (최초 1회)</h3>
+          <p class="ml-8 leading-relaxed">AI 기능을 쓰려면 Google AI Studio에서 무료로 발급받은 Gemini API 키가 필요합니다.</p>
+          <ol class="ml-8 mt-2 space-y-1 text-slate-600 list-decimal list-inside">
+            <li><a href="https://aistudio.google.com" target="_blank" class="text-amber-600 underline">aistudio.google.com</a> 접속 → Google 계정 로그인</li>
+            <li>"Get API Key" → "Create API Key" 클릭</li>
+            <li>발급된 키를 복사해 상단 입력창에 붙여넣고 "키 확인" 클릭</li>
+          </ol>
+          <p class="ml-8 mt-2 text-xs text-slate-500">※ 키는 이 브라우저에만 저장되며, 무료 사용량 내에서 추가 비용 없이 쓸 수 있습니다.</p>
+        </div>
+        <div>
+          <h3 class="font-bold text-slate-900 mb-2 flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-amber-500 text-white text-xs flex items-center justify-center font-bold">2</span> 설교 정보 입력</h3>
+          <p class="ml-8 leading-relaxed">설교 제목과 설교자를 입력하면 첫 장(타이틀 슬라이드)이 자동으로 만들어집니다.</p>
+        </div>
+        <div>
+          <h3 class="font-bold text-slate-900 mb-2 flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-amber-500 text-white text-xs flex items-center justify-center font-bold">3</span> 성경구절 슬라이드 만들기</h3>
+          <p class="ml-8 leading-relaxed">설교 원고를 붙여넣고 <b>"성경구절 자동 추출"</b> 버튼을 누르면 AI가 구절을 찾아 슬라이드를 만듭니다. 3절 이상인 구절은 자동으로 2절씩 나눠줍니다.</p>
+        </div>
+        <div>
+          <h3 class="font-bold text-slate-900 mb-2 flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-amber-500 text-white text-xs flex items-center justify-center font-bold">4</span> 슬라이드 다듬기</h3>
+          <p class="ml-8 leading-relaxed">상단 도구모음에서 <b>성경 폰트</b>(명조/고딕/나눔명조/나눔고딕), <b>정렬</b>(왼쪽/가운데/오른쪽), <b>성경 레이아웃</b>(전체 텍스트/왼쪽 텍스트+오른쪽 이미지칸/왼쪽 이미지칸+오른쪽 텍스트)을 바꿀 수 있습니다. 제목 뱃지·장절·본문은 서로 다른 색으로 표시됩니다. 이미지칸은 PPT에서 사진을 넣는 자리입니다.</p>
+          <ul class="ml-8 space-y-1 text-slate-600 list-disc list-inside">
+            <li>썸네일 드래그로 순서 변경, ✕ 삭제, 복사 버튼으로 복제</li>
+            <li>연필 버튼으로 말씀 내용 직접 수정</li>
+            <li>상단 A 버튼으로 글자 크기 조절 (작게/보통/크게)</li>
+            <li>Ctrl+Z로 실행 취소, Ctrl+Y로 다시 실행</li>
+            <li>작업은 자동으로 저장됩니다 (새로고침해도 유지)</li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="font-bold text-slate-900 mb-2 flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-amber-500 text-white text-xs flex items-center justify-center font-bold">5</span> 저장하기</h3>
+          <ul class="ml-8 space-y-1 text-slate-600 list-disc list-inside">
+            <li><b>PPTX 다운로드</b>: PowerPoint에서 열리는 파일 (텍스트 수정 가능)</li>
+            <li><b>PDF 저장</b>: 인쇄 창에서 "PDF로 저장" 선택</li>
+            <li><b>이미지 저장</b>: 슬라이드에 마우스를 올리면 개별 이미지 저장 가능</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200 bg-white px-4 lg:px-8 py-3 flex items-center justify-center gap-3">
+    <p class="text-xs text-slate-500">GraceSlide Pro v1.0</p>
+    <span class="text-slate-300">|</span>
+    <p class="text-xs text-slate-500">앱 문의) shs목사 · ttd0732@hanmail.net</p>
+  </footer>
+
+  <script type="module">
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Configuration Data Arrays (Expanded to exactly 15 options each)
+
+
+
+    const THEMES = [
+        { id: 'cinematic_dark', name: '1. 시네마틱 다크 (블랙/골드)' },
+        { id: 'modern_light', name: '2. 모던 라이트 (순백색/검정)' },
+        { id: 'royal_gold', name: '3. 로열 골드 (고급스러운 금빛)' },
+        { id: 'deep_sapphire', name: '4. 딥 사파이어 (짙은 남색)' },
+        { id: 'emerald_grace', name: '5. 에메랄드 은혜 (짙은 녹색)' },
+        { id: 'warm_ivory', name: '6. 웜 아이보리 (따뜻한 상아색)' },
+        { id: 'midnight_purple', name: '7. 미드나잇 퍼플 (보라빛)' },
+        { id: 'autumn_terracotta', name: '8. 어텀 테라코타 (따스한 흙빛)' },
+        { id: 'nordic_slate', name: '9. 노르딕 슬레이트 (세련된 차분함)' },
+        { id: 'pure_skyblue', name: '10. 퓨어 스카이블루 (청명한 하늘빛)' },
+        { id: 'majestic_crimson', name: '11. 마제스틱 크림슨 (장엄한 진홍색)' },
+        { id: 'ash_gray', name: '12. 애쉬 그레이 (차분한 은회색)' },
+        { id: 'olive_peace', name: '13. 올리브 피스 (평화로운 연녹색)' },
+        { id: 'dawn_coral', name: '14. 새벽 코랄 (은은한 코랄 핑크)' },
+        { id: 'deep_forest', name: '15. 딥 포레스트 (차분하고 묵직한 숲색)' },
+        { id: 'golden_hour', name: '16. 골든 아워 (황금빛 석양)' },
+        { id: 'mystic_violet', name: '17. 미스틱 바이올렛 (신비로운 보라)' },
+        { id: 'ocean_deep', name: '18. 오션 딥블루 (깊은 바다색)' },
+        { id: 'cherry_blossom', name: '19. 체리 블로섬 (벚꽃 핑크)' },
+        { id: 'champagne_beige', name: '20. 샴페인 베이지 (은은한 베이지)' },
+        { id: 'copper_brown', name: '21. 카퍼 브라운 (구릿빛 갈색)' },
+        { id: 'ice_mint', name: '22. 아이스 민트 (시원한 민트)' },
+        { id: 'wine_burgundy', name: '23. 와인 버건디 (깊은 와인색)' },
+        { id: 'sunset_orange', name: '24. 선셋 오렌지 (석양 주황)' },
+        { id: 'pearl_white', name: '25. 펄 화이트 (진주빛 흰색)' }
+    ];
+
+    // Color Palettes for Rendering (15 Palettes)
+    const THEME_PALETTES = {
+        'modern_light': { bg: 'FFFFFF', text: '000000', accent: '000000', refText: '000000', subText: '404040', isDark: false },
+        'cinematic_dark': { bg: '0A0A0A', text: 'FFFFFF', accent: 'D4AF37', refText: 'D4AF37', subText: 'A3A3A3', isDark: true },
+        'royal_gold': { bg: '1A1500', text: 'FDF6E3', accent: 'FFD700', refText: 'FFD700', subText: 'D4B85E', isDark: true },
+        'deep_sapphire': { bg: '001122', text: 'E6F2FF', accent: '4DA6FF', refText: '4DA6FF', subText: '80BFFF', isDark: true },
+        'emerald_grace': { bg: '002211', text: 'E6FFE6', accent: '33CC77', refText: '33CC77', subText: '80FFB2', isDark: true },
+        'warm_ivory': { bg: 'FAF6F0', text: '2C1E16', accent: '8B5A2B', refText: '8B5A2B', subText: '5C4033', isDark: false },
+        'midnight_purple': { bg: '1A0022', text: 'F2E6FF', accent: 'B366FF', refText: 'B366FF', subText: 'D9B3FF', isDark: true },
+        'autumn_terracotta': { bg: '2D1408', text: 'FDECE4', accent: 'E88D67', refText: 'E88D67', subText: 'F4BCA3', isDark: true },
+        'nordic_slate': { bg: '1E293B', text: 'F8FAFC', accent: '94A3B8', refText: '94A3B8', subText: 'CBD5E1', isDark: true },
+        'pure_skyblue': { bg: 'F0F8FF', text: '003366', accent: '5DADE2', refText: '5DADE2', subText: '2874A6', isDark: false },
+        'majestic_crimson': { bg: '2A0808', text: 'FFF0F0', accent: 'E53935', refText: 'E53935', subText: 'EF9A9A', isDark: true },
+        'ash_gray': { bg: 'ECEFF1', text: '263238', accent: '78909C', refText: '78909C', subText: '546E7A', isDark: false },
+        'olive_peace': { bg: 'F4F6F0', text: '2E4028', accent: '7CB342', refText: '7CB342', subText: '558B2F', isDark: false },
+        'dawn_coral': { bg: 'FFF0EC', text: '4A1911', accent: 'F1948A', refText: 'F1948A', subText: 'C0392B', isDark: false },
+        'deep_forest': { bg: '0B1C15', text: 'E8F5E9', accent: '4CAF50', refText: '4CAF50', subText: 'A5D6A7', isDark: true },
+        'golden_hour': { bg: '2B1A08', text: 'FFF8E7', accent: 'FFB84D', refText: 'FFB84D', subText: 'FFD699', isDark: true },
+        'mystic_violet': { bg: '150A2E', text: 'F5EEFF', accent: '9D6BFF', refText: '9D6BFF', subText: 'C4A8FF', isDark: true },
+        'ocean_deep': { bg: '061826', text: 'E8F4FF', accent: '3D9DF2', refText: '3D9DF2', subText: '8AC4F8', isDark: true },
+        'cherry_blossom': { bg: 'FFF0F3', text: '4A1522', accent: 'F2789F', refText: 'F2789F', subText: 'A84A63', isDark: false },
+        'champagne_beige': { bg: 'F7F0E1', text: '3D3225', accent: 'C9A96A', refText: 'C9A96A', subText: '8A7550', isDark: false },
+        'copper_brown': { bg: '241610', text: 'F5EDE4', accent: 'C87F4A', refText: 'C87F4A', subText: 'D9A877', isDark: true },
+        'ice_mint': { bg: 'EDFBF7', text: '123B33', accent: '4ECBA8', refText: '4ECBA8', subText: '2A7A64', isDark: false },
+        'wine_burgundy': { bg: '200A12', text: 'FBEFF2', accent: 'C94F6D', refText: 'C94F6D', subText: 'E08AA0', isDark: true },
+        'sunset_orange': { bg: '2B1206', text: 'FFF3E8', accent: 'FF8C42', refText: 'FF8C42', subText: 'FFB37E', isDark: true },
+        'pearl_white': { bg: 'FDFDFD', text: '2A2A2A', accent: 'B8B8B8', refText: '8A8A8A', subText: '6A6A6A', isDark: false }
+    };
+
+    // App State
+    const state = {
+      theme: 'cinematic_dark',
+      aspect: '16x9',
+      currentSlideIndex: 0,
+      slides: []
+    };
+
+    // DOM Elements Cache
+    const els = {
+        title: document.getElementById('sermon-title'),
+        speaker: document.getElementById('sermon-speaker'),
+        content: document.getElementById('sermon-content'),
+        themeSel: document.getElementById('theme-selector'),
+        aspectSel: document.getElementById('aspect-selector'),
+        stage: document.getElementById('slide-stage'),
+        stageInner: document.getElementById('stage-inner'),
+        stageOverlay: document.getElementById('stage-bg-overlay'),
+        counter: document.getElementById('slide-counter'),
+        thumbContainer: document.getElementById('slides-thumbnail-container'),
+        btnParse: document.getElementById('btn-parse-scriptures'),
+        btnExport: document.getElementById('btn-export-pptx'),
+        btnSample: document.getElementById('btn-load-sample'),
+        btnClear: document.getElementById('btn-clear-slides'),
+        btnPrev: document.getElementById('btn-prev-slide'),
+        btnNext: document.getElementById('btn-next-slide'),
+        btnDownloadImg: document.getElementById('btn-download-single-image'),
+        btnVerifyApi: document.getElementById('btn-verify-api'),
+        apiKeyInput: document.getElementById('api-key-input'),
+        apiStatusDot: document.getElementById('api-status-dot'),
+        apiStatusText: document.getElementById('api-status-text'),
+        apiStatusBadge: document.getElementById('api-status-badge')
+    };
+
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    const escapeHtml = (t) => t ? t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&quot;") : "";
+
+    function showToast(msg, type='info', duration=4000) {
+      const c = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      
+      let bgClass = 'bg-slate-800 border-amber-500';
+      let icon = '<i data-lucide="info" class="w-5 h-5 text-amber-500 mt-0.5"></i>';
+      
+      if (type === 'success') {
+          bgClass = 'bg-green-900 border-green-500';
+          icon = '<i data-lucide="check-circle" class="w-5 h-5 text-green-400 mt-0.5"></i>';
+      } else if (type === 'error') {
+          bgClass = 'bg-red-900 border-red-500';
+          icon = '<i data-lucide="alert-circle" class="w-5 h-5 text-red-400 mt-0.5"></i>';
+      }
+
+      t.className = `flex items-start gap-3 px-4 py-3 rounded-xl text-white text-sm shadow-2xl border max-w-sm break-words ${bgClass} transform transition-all translate-y-full opacity-0`;
+      t.innerHTML = `${icon} <div class="flex-1">${msg.replace(/\n/g, '<br>')}</div>`;
+      
+      c.appendChild(t);
+      lucide.createIcons({ root: t }); // initialize icon inside toast
+      
+      // Animate in
+      requestAnimationFrame(() => {
+          t.classList.remove('translate-y-full', 'opacity-0');
+      });
+
+      // Animate out
+      setTimeout(() => {
+          t.classList.add('translate-y-full', 'opacity-0');
+          setTimeout(() => t.remove(), 300);
+      }, duration);
+    }
+
+    function init() {
+      // Populate Selectors
+      THEMES.forEach(s => els.themeSel.add(new Option(s.name, s.id)));
+      els.themeSel.value = state.theme;
+
+      // Restore saved work if exists
+      const restored = restoreWork();
+      if (!restored) {
+        // Add Initial Title Slide
+        updateTitleSlide();
+      } else {
+        renderAll();
+      }
+
+      // Setup API Key Persistence & Status
+      if(els.apiKeyInput) {
+          const savedKey = localStorage.getItem('gemini_api_key');
+          if (savedKey) els.apiKeyInput.value = savedKey;
+          
+          if(localStorage.getItem('api_verified') === 'true') {
+              setApiStatus('verified');
+          }
+
+          els.apiKeyInput.addEventListener('input', () => {
+              setApiStatus('unverified');
+              localStorage.removeItem('api_verified');
+          });
+      }
+
+      // Event Listeners
+      els.btnParse.addEventListener('click', handleParseScriptures);
+      els.themeSel.addEventListener('change', (e) => { state.theme = e.target.value; renderAll(); saveWork(); });
+      els.aspectSel.addEventListener('change', (e) => { state.aspect = e.target.value; applyAspect(); saveWork(); });
+
+      // Font selector for scripture
+      document.getElementById('font-selector').addEventListener('change', (e) => {
+        const current = state.slides[state.currentSlideIndex];
+        if (current && current.type === 'scripture') {
+          pushHistory();
+          current.bodyFont = e.target.value;
+          renderAll();
+          saveWork();
+        } else {
+          showToast("성경구절 슬라이드를 선택해주세요.", "error");
+          e.target.value = "Noto Serif KR";
+        }
+      });
+
+      // Text alignment for scripture
+      function setTextAlign(align) {
+        const current = state.slides[state.currentSlideIndex];
+        if (current && current.type === 'scripture') {
+          pushHistory();
+          current.textAlign = align;
+          renderAll();
+          saveWork();
+          ['left', 'center', 'right'].forEach(a => {
+            const btn = document.getElementById(`btn-align-${a}`);
+            if (a === align) {
+              btn.className = "p-1.5 rounded-lg bg-amber-500 text-white border border-amber-500 transition-colors";
+            } else {
+              btn.className = "p-1.5 rounded-lg bg-white hover:bg-amber-500 hover:text-white text-slate-600 border border-slate-200 transition-colors";
+            }
+          });
+        } else {
+          showToast("성경구절 슬라이드를 선택해주세요.", "error");
+        }
+      }
+      document.getElementById('btn-align-left').addEventListener('click', () => setTextAlign('left'));
+      document.getElementById('btn-align-center').addEventListener('click', () => setTextAlign('center'));
+      document.getElementById('btn-align-right').addEventListener('click', () => setTextAlign('right'));
+
+      // Scripture layout selector
+      document.getElementById('scripture-layout-selector').addEventListener('change', (e) => {
+        const current = state.slides[state.currentSlideIndex];
+        if (current && current.type === 'scripture') {
+          pushHistory();
+          current.scriptureLayout = e.target.value;
+          renderAll();
+          saveWork();
+        } else {
+          showToast("성경구절 슬라이드를 선택해주세요.", "error");
+          e.target.value = "full";
+        }
+      });
+      els.btnPrev.addEventListener('click', () => navigateSlide(-1));
+      els.btnNext.addEventListener('click', () => navigateSlide(1));
+      els.btnClear.addEventListener('click', handleClear);
+      els.btnSample.addEventListener('click', loadSample);
+      els.btnExport.addEventListener('click', exportToPPTX);
+      els.btnDownloadImg.addEventListener('click', downloadCurrentSlideAsImage);
+      if(els.btnVerifyApi) els.btnVerifyApi.addEventListener('click', verifyApiKey);
+
+      // Undo/Redo
+      document.getElementById('btn-undo').addEventListener('click', undo);
+      document.getElementById('btn-redo').addEventListener('click', redo);
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+          const tag = document.activeElement?.tagName;
+          if (tag !== 'INPUT' && tag !== 'TEXTAREA') { e.preventDefault(); undo(); }
+        }
+        if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') ||
+            ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')) {
+          e.preventDefault(); redo();
+        }
+      });
+
+      // Font size
+      document.getElementById('btn-font-smaller').addEventListener('click', () => adjustFontSize(-1));
+      document.getElementById('btn-font-bigger').addEventListener('click', () => adjustFontSize(1));
+
+      // PDF export
+      document.getElementById('btn-export-pdf').addEventListener('click', exportToPDF);
+
+      // Help modal
+      const helpModal = document.getElementById('help-modal');
+      document.getElementById('btn-help').addEventListener('click', () => {
+        helpModal.classList.remove('hidden');
+        helpModal.classList.add('flex');
+        lucide.createIcons({ root: helpModal });
+      });
+      document.getElementById('btn-close-help').addEventListener('click', () => {
+        helpModal.classList.add('hidden');
+        helpModal.classList.remove('flex');
+      });
+      helpModal.addEventListener('click', (e) => {
+        if (e.target === helpModal) {
+          helpModal.classList.add('hidden');
+          helpModal.classList.remove('flex');
+        }
+      });
+      
+      els.title.addEventListener('input', () => { updateTitleSlide(); saveWork(); });
+      els.speaker.addEventListener('input', () => { updateTitleSlide(); saveWork(); });
+
+      applyAspect();
+
+      // 초기 히스토리 기록
+      pushHistory();
+      updateUndoButtons();
+    }
+
+    // Auto-save / restore (slides, theme, aspect, title, speaker)
+    // Note: API key is stored separately under 'gemini_api_key'
+    function saveWork() {
+      try {
+        localStorage.setItem('graceslide_work', JSON.stringify({
+          slides: state.slides,
+          theme: state.theme,
+          aspect: state.aspect,
+          title: els.title.value,
+          speaker: els.speaker.value
+        }));
+      } catch(e) { /* storage full */ }
+    }
+
+    function restoreWork() {
+      try {
+        const saved = localStorage.getItem('graceslide_work');
+        if (saved) {
+          const data = JSON.parse(saved);
+          if (data.slides && data.slides.length > 0) {
+            state.slides = data.slides;
+            state.theme = data.theme || 'cinematic_dark';
+            state.aspect = data.aspect || '16x9';
+            els.themeSel.value = state.theme;
+            els.aspectSel.value = state.aspect;
+            if (data.title) els.title.value = data.title;
+            if (data.speaker) els.speaker.value = data.speaker;
+            return true;
+          }
+        }
+      } catch(e) {}
+      return false;
+    }
+
+    function applyAspect() {
+      els.stage.classList.remove('aspect-slide');
+      els.stage.style.aspectRatio = state.aspect === '4x3' ? '4 / 3' : '16 / 9';
+    }
+
+    function updateTitleSlide() {
+        if (state.slides.length === 0) {
+            state.slides.push({ type: 'title', title: '', subtitle: '' });
+        }
+        if (state.slides[0].type === 'title') {
+            state.slides[0].title = els.title.value.trim() || '제목을 입력하세요';
+            state.slides[0].subtitle = els.speaker.value.trim();
+            renderAll();
+        }
+    }
+
+    function renderAll() {
+        if (state.slides.length === 0) return;
+        
+        // Ensure index is within bounds
+        if (state.currentSlideIndex >= state.slides.length) {
+            state.currentSlideIndex = state.slides.length - 1;
+        }
+
+        renderSlideStage();
+        renderThumbnails();
+    }
+
+    function renderSlideStage() {
+      const pal = THEME_PALETTES[state.theme];
+      const current = state.slides[state.currentSlideIndex];
+      
+      els.counter.textContent = `${state.currentSlideIndex + 1} / ${state.slides.length}`;
+
+      // Sync font selector and alignment buttons with current slide
+      const fontSel = document.getElementById('font-selector');
+      if (fontSel) fontSel.value = current?.bodyFont || 'Noto Serif KR';
+      const layoutSel = document.getElementById('scripture-layout-selector');
+      if (layoutSel) layoutSel.value = current?.scriptureLayout || 'full';
+      const curAlign = current?.textAlign || 'center';
+      ['left', 'center', 'right'].forEach(a => {
+        const btn = document.getElementById(`btn-align-${a}`);
+        if (btn) {
+          btn.className = a === curAlign
+            ? "p-1.5 rounded-lg bg-amber-500 text-white border border-amber-500 transition-colors"
+            : "p-1.5 rounded-lg bg-white hover:bg-amber-500 hover:text-white text-slate-600 border border-slate-200 transition-colors";
+        }
+      });
+
+      // Reset Base Styles
+      els.stage.style.backgroundColor = `#${pal.bg}`;
+      els.stage.style.color = `#${pal.text}`;
+      els.stage.style.backgroundImage = 'none';
+      els.stageOverlay.classList.add('hidden');
+      els.stageInner.className = "w-full h-full flex flex-col justify-center items-center relative z-10 p-6 sm:p-10";
+
+      if (!current) return;
+
+      const isLongText = (current.verseContent || '').length > 80;
+      const textSize = current.textSize || 'md';
+      const sizeMap = {
+        sm: isLongText ? 'text-xl sm:text-2xl lg:text-3xl' : 'text-2xl sm:text-3xl lg:text-4xl',
+        md: isLongText ? 'text-2xl sm:text-3xl lg:text-4xl' : 'text-3xl sm:text-4xl lg:text-5xl',
+        lg: isLongText ? 'text-3xl sm:text-4xl lg:text-5xl' : 'text-4xl sm:text-5xl lg:text-6xl'
+      };
+      const fontPt = sizeMap[textSize] || sizeMap.md;
+      
+      // TITLE SLIDE
+      if (current.type === 'title') {
+        els.stageInner.innerHTML = `
+          <div class="space-y-6 max-w-4xl text-center flex flex-col items-center">
+            <div class="w-16 h-1 bg-amber-500 rounded-full mb-4 opacity-80" style="background-color:#${pal.accent}"></div>
+            <h1 class="text-5xl sm:text-6xl font-serif font-black tracking-tight drop-shadow-sm">${escapeHtml(current.title)}</h1>
+            <div class="text-xl sm:text-2xl opacity-75 font-medium mt-6 tracking-wide">${escapeHtml(current.subtitle)}</div>
+          </div>
+        `;
+      } 
+      // SCRIPTURE SLIDE (Text Only)
+      else if (current.type === 'scripture') {
+        const bodyColor = `#${pal.text}`;
+        const refColor = `#${pal.accent}`;
+        const bodyFont = current.bodyFont || 'Noto Serif KR';
+        const layout = current.scriptureLayout || 'full';
+
+        const scriptureContent = `
+            <div class="flex flex-col ${current.textAlign === 'left' ? 'items-start' : (current.textAlign === 'right' ? 'items-end' : 'items-center')} gap-3">
+              <span class="px-4 py-1.5 rounded-full text-sm font-bold border" style="color:#FF3333; background-color:#${pal.accent}; border-color:#${pal.accent}">
+                ${escapeHtml(current.heading || '본문 말씀')}
+              </span>
+              <div class="text-2xl font-bold border-b-2 pb-3 px-8 tracking-wider mt-2" style="border-color:rgba(150,150,150,0.3); color:${refColor};">
+                ${escapeHtml(current.reference)}
+              </div>
+            </div>
+            <div class="font-semibold ${fontPt} leading-[1.6] break-keep px-4" style="color:${bodyColor}; font-family:'${bodyFont}', serif;">
+              ${escapeHtml(current.verseContent).replace(/\[(\d+)절\]/g, `<span class="text-sm px-2.5 py-1 rounded-md opacity-80 font-sans mr-2 align-middle inline-block" style="background-color:rgba(150,150,150,0.15)">$1절</span>`)}
+            </div>
+        `;
+
+        if (layout === 'full') {
+          const alignClass = current.textAlign === 'left' ? 'text-left items-start' : (current.textAlign === 'right' ? 'text-right items-end' : 'text-center items-center');
+          els.stageInner.innerHTML = `
+            <div class="w-full max-w-5xl ${alignClass} space-y-8 flex flex-col">
+              ${scriptureContent}
+            </div>
+          `;
+        } else {
+          // 50/50 레이아웃: 한쪽은 텍스트, 한쪽은 이미지 빈칸
+          const isLeftText = layout === 'left_text';
+          const textSide = `
+            <div class="w-1/2 h-full flex flex-col justify-center ${current.textAlign === 'left' ? 'items-start text-left' : (current.textAlign === 'right' ? 'items-end text-right' : 'items-center text-center')} space-y-6 p-8">
+              ${scriptureContent}
+            </div>
+          `;
+          const imgSide = `
+            <div class="w-1/2 h-full flex items-center justify-center border-2 border-dashed rounded-xl m-4" style="border-color:rgba(150,150,150,0.4); background-color:rgba(150,150,150,0.05);">
+              <div class="text-center opacity-50">
+                <i data-lucide="image-plus" class="w-12 h-12 mx-auto mb-2"></i>
+                <p class="text-sm font-medium">이미지 자리</p>
+                <p class="text-xs">PPT에서 사진 넣으세요</p>
+              </div>
+            </div>
+          `;
+          els.stageInner.className = "w-full h-full flex z-10";
+          els.stageInner.innerHTML = isLeftText ? textSide + imgSide : imgSide + textSide;
+          lucide.createIcons({ root: els.stageInner });
+        }
+      }
+      // IMAGE SLIDES
+      else if (current.image) {
+        if (current.type === 'image_only') {
+          els.stage.style.backgroundImage = `url('${current.image}')`;
+          els.stage.style.backgroundSize = 'cover';
+          els.stage.style.backgroundPosition = 'center';
+          els.stageInner.innerHTML = ``;
+        } 
+        else if (current.type === 'split_left_text') {
+          els.stageInner.className = "w-full h-full p-0 flex z-10"; // Override padding
+          els.stageInner.innerHTML = `
+            <div class="w-full h-full grid grid-cols-2">
+              <div class="flex flex-col justify-center p-12 lg:p-16 text-left">
+                <div class="font-serif font-bold ${fontPt} leading-relaxed break-keep text-shadow-sm">"${escapeHtml(current.verseContent)}"</div>
+              </div>
+              <div class="bg-cover bg-center h-full" style="background-image:url('${current.image}')"></div>
+            </div>
+          `;
+        }
+        else if (current.type === 'split_right_text') {
+          els.stageInner.className = "w-full h-full p-0 flex z-10"; // Override padding
+          els.stageInner.innerHTML = `
+            <div class="w-full h-full grid grid-cols-2">
+              <div class="bg-cover bg-center h-full" style="background-image:url('${current.image}')"></div>
+              <div class="flex flex-col justify-center p-12 lg:p-16 text-right">
+                <div class="font-serif font-bold ${fontPt} leading-relaxed break-keep text-shadow-sm">"${escapeHtml(current.verseContent)}"</div>
+              </div>
+            </div>
+          `;
+        }
+        else if (current.type === 'split_top_text') {
+            els.stageInner.className = "w-full h-full p-0 flex flex-col z-10";
+            els.stageInner.innerHTML = `
+              <div class="w-full flex-none p-6 lg:p-10 text-center" style="background-color:rgba(0,0,0,0.05)">
+                <div class="font-serif font-bold ${fontPt} leading-relaxed break-keep text-shadow-sm">"${escapeHtml(current.verseContent)}"</div>
+              </div>
+              <div class="w-full flex-grow bg-cover bg-center" style="background-image:url('${current.image}')"></div>
+            `;
+        }
+        else if (current.type === 'split_bottom_text') {
+            els.stageInner.className = "w-full h-full p-0 flex flex-col z-10";
+            els.stageInner.innerHTML = `
+              <div class="w-full flex-grow bg-cover bg-center" style="background-image:url('${current.image}')"></div>
+              <div class="w-full flex-none p-6 lg:p-10 text-center" style="background-color:rgba(0,0,0,0.05)">
+                <div class="font-serif font-bold ${fontPt} leading-relaxed break-keep text-shadow-sm">"${escapeHtml(current.verseContent)}"</div>
+              </div>
+            `;
+        }
+        else if (current.type === 'polaroid') {
+            els.stageInner.className = "w-full h-full p-10 flex flex-col items-center justify-center z-10";
+            els.stageInner.innerHTML = `
+              <div class="bg-white p-4 pb-12 rounded shadow-2xl flex flex-col items-center max-w-xl w-full hover:-translate-y-1 transition-transform border border-slate-200">
+                <div class="w-full aspect-video bg-cover bg-center mb-6" style="background-image:url('${current.image}')"></div>
+                <div class="font-serif font-bold text-xl sm:text-2xl text-slate-900 leading-relaxed break-keep text-center">"${escapeHtml(current.verseContent)}"</div>
+              </div>
+            `;
+        }
+        else if (current.type === 'side_banner_left') {
+             els.stageInner.className = "w-full h-full p-0 flex z-10";
+             els.stageInner.innerHTML = `
+               <div class="w-full h-full grid grid-cols-12">
+                 <div class="col-span-4 bg-cover bg-center h-full" style="background-image:url('${current.image}')"></div>
+                 <div class="col-span-8 flex flex-col justify-center p-12 lg:p-16 text-left" style="background-color:rgba(0,0,0,0.03)">
+                   <div class="font-serif font-bold ${fontPt} leading-relaxed break-keep text-shadow-sm">"${escapeHtml(current.verseContent)}"</div>
+                 </div>
+               </div>
+             `;
+        }
+        else if (current.type === 'side_banner_right') {
+             els.stageInner.className = "w-full h-full p-0 flex z-10";
+             els.stageInner.innerHTML = `
+               <div class="w-full h-full grid grid-cols-12">
+                 <div class="col-span-8 flex flex-col justify-center p-12 lg:p-16 text-right" style="background-color:rgba(0,0,0,0.03)">
+                   <div class="font-serif font-bold ${fontPt} leading-relaxed break-keep text-shadow-sm">"${escapeHtml(current.verseContent)}"</div>
+                 </div>
+                 <div class="col-span-4 bg-cover bg-center h-full" style="background-image:url('${current.image}')"></div>
+               </div>
+             `;
+        }
+        else if (current.type === 'overlay_bottom') {
+             els.stageInner.className = "w-full h-full p-0 relative z-10 flex flex-col justify-end";
+             els.stageInner.innerHTML = `
+               <div class="absolute inset-0 bg-cover bg-center -z-10" style="background-image:url('${current.image}')"></div>
+               <div class="w-full p-8 lg:p-12 text-center backdrop-blur-md" style="background-color:${pal.isDark ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.85)'}">
+                 <div class="font-serif font-bold ${fontPt} leading-relaxed break-keep text-shadow-sm" style="color:#${pal.text}">"${escapeHtml(current.verseContent)}"</div>
+               </div>
+             `;
+        }
+        else if (current.type === 'overlay_left') {
+             els.stageInner.className = "w-full h-full p-0 relative z-10 flex";
+             els.stageInner.innerHTML = `
+               <div class="absolute inset-0 bg-cover bg-center -z-10" style="background-image:url('${current.image}')"></div>
+               <div class="w-2/5 h-full p-8 lg:p-12 flex flex-col justify-center text-left backdrop-blur-md shadow-2xl" style="background-color:${pal.isDark ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.85)'}">
+                 <div class="font-serif font-bold ${fontPt} leading-relaxed break-keep text-shadow-sm" style="color:#${pal.text}">"${escapeHtml(current.verseContent)}"</div>
+               </div>
+             `;
+        }
+        else if (current.type === 'overlay_right') {
+             els.stageInner.className = "w-full h-full p-0 relative z-10 flex justify-end";
+             els.stageInner.innerHTML = `
+               <div class="absolute inset-0 bg-cover bg-center -z-10" style="background-image:url('${current.image}')"></div>
+               <div class="w-2/5 h-full p-8 lg:p-12 flex flex-col justify-center text-right backdrop-blur-md shadow-2xl" style="background-color:${pal.isDark ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.85)'}">
+                 <div class="font-serif font-bold ${fontPt} leading-relaxed break-keep text-shadow-sm" style="color:#${pal.text}">"${escapeHtml(current.verseContent)}"</div>
+               </div>
+             `;
+        }
+        else if (current.type === 'margin_frame') {
+             els.stage.style.backgroundColor = `#${pal.bg}`; // Ensure bg is solid
+             els.stageInner.className = "w-full h-full p-6 lg:p-10 flex flex-col z-10";
+             els.stageInner.innerHTML = `
+               <div class="w-full flex-grow rounded-2xl bg-cover bg-center shadow-lg border-2" style="border-color:${pal.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}; background-image:url('${current.image}')"></div>
+               <div class="w-full flex-none pt-6 text-center">
+                 <div class="font-serif font-bold ${fontPt} leading-relaxed break-keep text-shadow-sm">"${escapeHtml(current.verseContent)}"</div>
+               </div>
+             `;
+        }
+        else if (current.type === 'floating_card') {
+             els.stageInner.className = "w-full h-full p-0 relative z-10 flex items-center justify-center";
+             els.stageInner.innerHTML = `
+               <div class="absolute inset-0 bg-cover bg-center -z-10" style="background-image:url('${current.image}')"></div>
+               <div class="absolute inset-0 bg-black/20 -z-10"></div>
+               <div class="max-w-2xl w-[80%] p-8 lg:p-10 text-center rounded-2xl shadow-2xl backdrop-blur-xl border border-white/10" style="background-color:${pal.isDark ? 'rgba(15,23,42,0.85)' : 'rgba(255,255,255,0.95)'}; color:${pal.isDark ? '#FFF' : '#000'}">
+                 <div class="font-serif font-bold ${fontPt} leading-relaxed break-keep">"${escapeHtml(current.verseContent)}"</div>
+               </div>
+             `;
+        }
+        else if (current.type === 'top_title_bottom_img') {
+             els.stageInner.className = "w-full h-full p-0 flex flex-col z-10";
+             els.stageInner.innerHTML = `
+               <div class="w-full flex-none p-5 lg:p-6 text-left border-b-4" style="background-color:rgba(0,0,0,0.05); border-color:#${pal.accent}">
+                 <div class="font-serif font-bold text-xl lg:text-2xl leading-relaxed break-keep text-shadow-sm flex items-center gap-3">
+                   <div class="w-2 h-8 rounded-full" style="background-color:#${pal.accent}"></div>
+                   "${escapeHtml(current.verseContent)}"
+                 </div>
+               </div>
+               <div class="w-full flex-grow bg-cover bg-center" style="background-image:url('${current.image}')"></div>
+             `;
+        }
+        else if (current.type === 'circle_frame') {
+             els.stageInner.className = "w-full h-full p-8 flex flex-col items-center justify-center z-10 gap-6";
+             els.stageInner.innerHTML = `
+               <div class="w-72 h-72 lg:w-96 lg:h-96 rounded-full bg-cover bg-center shadow-2xl border-4 flex-shrink-0" style="background-image:url('${current.image}'); border-color:#${pal.accent}"></div>
+               <div class="font-serif font-bold ${fontPt} leading-relaxed break-keep text-center max-w-3xl">"${escapeHtml(current.verseContent)}"</div>
+             `;
+        }
+        else if (current.type === 'diagonal_split') {
+             els.stageInner.className = "w-full h-full p-0 relative z-10 overflow-hidden";
+             els.stageInner.innerHTML = `
+               <div class="absolute inset-0 bg-cover bg-center" style="background-image:url('${current.image}'); clip-path:polygon(0 0, 55% 0, 35% 100%, 0 100%)"></div>
+               <div class="absolute inset-0 flex items-center justify-end p-12 lg:p-16" style="background-color:rgba(0,0,0,0.02)">
+                 <div class="w-[45%] font-serif font-bold ${fontPt} leading-relaxed break-keep text-right">"${escapeHtml(current.verseContent)}"</div>
+               </div>
+             `;
+        }
+        else if (current.type === 'top_text_strip') {
+             els.stageInner.className = "w-full h-full p-0 flex flex-col z-10";
+             els.stageInner.innerHTML = `
+               <div class="w-full flex-grow flex flex-col justify-center p-10 lg:p-14 text-center">
+                 <div class="font-serif font-bold ${fontPt} leading-relaxed break-keep">"${escapeHtml(current.verseContent)}"</div>
+               </div>
+               <div class="w-full h-32 lg:h-40 bg-cover bg-center flex-none border-t-4" style="background-image:url('${current.image}'); border-color:#${pal.accent}"></div>
+             `;
+        }
+        else if (current.type === 'dual_text') {
+             els.stageInner.className = "w-full h-full p-0 z-10";
+             els.stageInner.innerHTML = `
+               <div class="w-full h-full grid grid-cols-3">
+                 <div class="flex flex-col justify-center p-8 text-right">
+                   <div class="font-serif font-bold text-xl lg:text-2xl leading-relaxed break-keep opacity-90">"${escapeHtml(current.verseContent)}"</div>
+                 </div>
+                 <div class="bg-cover bg-center h-full" style="background-image:url('${current.image}')"></div>
+                 <div class="flex flex-col justify-center p-8 text-left">
+                   <div class="font-serif font-bold text-xl lg:text-2xl leading-relaxed break-keep opacity-90">"${escapeHtml(current.verseContent)}"</div>
+                 </div>
+               </div>
+             `;
+        }
+        else if (current.type === 'vertical_card') {
+             els.stageInner.className = "w-full h-full p-8 flex items-center justify-center z-10";
+             els.stageInner.innerHTML = `
+               <div class="h-full max-h-[90%] w-80 lg:w-96 rounded-2xl overflow-hidden shadow-2xl flex flex-col border" style="border-color:${pal.isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'}; background-color:${pal.isDark ? 'rgba(15,23,42,0.9)' : 'rgba(255,255,255,0.95)'}">
+                 <div class="h-1/2 bg-cover bg-center" style="background-image:url('${current.image}')"></div>
+                 <div class="h-1/2 p-6 flex flex-col justify-center text-center">
+                   <div class="font-serif font-bold text-xl lg:text-2xl leading-relaxed break-keep">"${escapeHtml(current.verseContent)}"</div>
+                 </div>
+               </div>
+             `;
+        }
+        else if (current.type === 'gradient_fade') {
+             els.stageInner.className = "w-full h-full p-0 relative z-10 flex flex-col justify-end";
+             els.stageInner.innerHTML = `
+               <div class="absolute inset-0 bg-cover bg-center" style="background-image:url('${current.image}')"></div>
+               <div class="absolute inset-0" style="background:linear-gradient(to top, ${pal.isDark ? 'rgba(0,0,0,0.92)' : 'rgba(255,255,255,0.95)'} 0%, ${pal.isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.4)'} 45%, transparent 75%)"></div>
+               <div class="relative z-10 p-10 lg:p-14 text-center">
+                 <div class="font-serif font-bold ${fontPt} leading-relaxed break-keep" style="color:#${pal.text}">"${escapeHtml(current.verseContent)}"</div>
+               </div>
+             `;
+        }
+        else if (current.type === 'corner_frame') {
+             els.stageInner.className = "w-full h-full p-10 lg:p-14 z-10 relative";
+             els.stageInner.innerHTML = `
+               <div class="absolute inset-6 lg:inset-10 border-2 rounded-lg pointer-events-none" style="border-color:#${pal.accent}"></div>
+               <div class="absolute top-6 left-6 lg:top-10 lg:left-10 w-8 h-8 border-t-4 border-l-4 rounded-tl-lg" style="border-color:#${pal.accent}"></div>
+               <div class="absolute top-6 right-6 lg:top-10 lg:right-10 w-8 h-8 border-t-4 border-r-4 rounded-tr-lg" style="border-color:#${pal.accent}"></div>
+               <div class="absolute bottom-6 left-6 lg:bottom-10 lg:left-10 w-8 h-8 border-b-4 border-l-4 rounded-bl-lg" style="border-color:#${pal.accent}"></div>
+               <div class="absolute bottom-6 right-6 lg:bottom-10 lg:right-10 w-8 h-8 border-b-4 border-r-4 rounded-br-lg" style="border-color:#${pal.accent}"></div>
+               <div class="w-full h-full bg-cover bg-center rounded-lg shadow-xl" style="background-image:url('${current.image}')">
+                 <div class="w-full h-full flex items-center justify-center p-10 rounded-lg" style="background-color:${pal.isDark ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.55)'}">
+                   <div class="font-serif font-bold ${fontPt} leading-relaxed break-keep text-center max-w-3xl">"${escapeHtml(current.verseContent)}"</div>
+                 </div>
+               </div>
+             `;
+        }
+        else if (current.type === 'triple_split') {
+             els.stageInner.className = "w-full h-full p-0 z-10";
+             els.stageInner.innerHTML = `
+               <div class="w-full h-full grid grid-cols-3">
+                 <div class="bg-cover bg-center h-full" style="background-image:url('${current.image}')"></div>
+                 <div class="flex flex-col justify-center p-8 text-center" style="background-color:${pal.isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.3)'}">
+                   <div class="font-serif font-bold ${fontPt} leading-relaxed break-keep">"${escapeHtml(current.verseContent)}"</div>
+                 </div>
+                 <div class="bg-cover bg-center h-full" style="background-image:url('${current.image}'); transform:scaleX(-1)"></div>
+               </div>
+             `;
+        }
+        else if (current.type === 'ribbon_title') {
+             els.stageInner.className = "w-full h-full p-0 relative z-10";
+             els.stageInner.innerHTML = `
+               <div class="absolute inset-0 bg-cover bg-center" style="background-image:url('${current.image}')"></div>
+               <div class="absolute top-8 left-1/2 -translate-x-1/2 px-10 py-4 shadow-xl flex items-center" style="background-color:#${pal.accent}; clip-path:polygon(0 0, 100% 0, 96% 50%, 100% 100%, 0 100%, 4% 50%)">
+                 <span class="font-bold text-lg lg:text-xl tracking-wide" style="color:#${pal.bg}">"${escapeHtml(current.verseContent)}"</span>
+               </div>
+             `;
+        }
+        else if (current.type === 'book_spread') {
+             els.stageInner.className = "w-full h-full p-8 lg:p-12 z-10 flex items-center justify-center";
+             els.stageInner.innerHTML = `
+               <div class="w-full max-w-5xl h-[85%] grid grid-cols-2 rounded-xl overflow-hidden shadow-2xl" style="background-color:${pal.isDark ? '#1a1a2e' : '#faf6f0'}">
+                 <div class="bg-cover bg-center border-r" style="background-image:url('${current.image}'); border-color:${pal.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}"></div>
+                 <div class="flex flex-col justify-center p-10 lg:p-14">
+                   <div class="w-10 h-1 rounded-full mb-6" style="background-color:#${pal.accent}"></div>
+                   <div class="font-serif font-bold ${fontPt} leading-[1.8] break-keep">"${escapeHtml(current.verseContent)}"</div>
+                 </div>
+               </div>
+             `;
+        }
+        else {
+          // Default Full BG with text overlay
+          els.stage.style.backgroundImage = `url('${current.image}')`;
+          els.stage.style.backgroundSize = 'cover';
+          els.stage.style.backgroundPosition = 'center';
+          els.stageOverlay.className = "absolute inset-0 z-0";
+          els.stageOverlay.style.backgroundColor = pal.isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)';
+          els.stageOverlay.style.backdropFilter = "blur(4px)";
+          
+          els.stageInner.innerHTML = `
+            <div class="p-8 max-w-4xl text-center rounded-2xl">
+              <h2 class="font-serif font-bold ${fontPt} leading-relaxed break-keep text-shadow-lg" style="${pal.isDark ? 'text-shadow: 0 4px 12px rgba(0,0,0,0.8);' : 'text-shadow: 0 2px 8px rgba(255,255,255,0.8);'}">
+                "${escapeHtml(current.verseContent)}"
+              </h2>
+            </div>
+          `;
+        }
+      }
+    }
+
+    function renderThumbnails() {
+      els.thumbContainer.innerHTML = '';
+      let draggedIdx = null;
+
+      state.slides.forEach((slide, idx) => {
+        const t = document.createElement('div');
+        t.draggable = true;
+        
+        let bgStyle = '';
+        let contentStr = slide.title || slide.reference || slide.verseContent || '이미지';
+        
+        if(slide.image) {
+            bgStyle = `background-image: url('${slide.image}'); background-size: cover; background-position: center;`;
+        }
+
+        const isSelected = idx === state.currentSlideIndex;
+        
+        t.className = `group relative aspect-slide rounded-lg cursor-grab flex flex-col justify-between overflow-hidden shadow-sm transition-all
+          ${isSelected ? 'ring-2 ring-amber-500 scale-[1.02] z-10' : 'ring-1 ring-slate-700/50 hover:ring-slate-500 opacity-80 hover:opacity-100'}
+        `;
+        
+        t.innerHTML = `
+          <div class="absolute inset-0 bg-white" style="${slide.image ? 'opacity: 0.7;' : ''}"></div>
+          ${slide.image ? `<div class="absolute inset-0" style="${bgStyle}"></div>` : ''}
+          <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10"></div>
+          
+          <div class="relative z-10 flex justify-between p-1.5 pointer-events-none">
+            <span class="font-bold text-[10px] bg-black/60 text-white px-1.5 rounded">${idx+1}</span>
+            <span class="text-[9px] font-medium px-1 rounded ${slide.type==='title'?'bg-blue-900 text-blue-200':(slide.image?'bg-emerald-900 text-emerald-200':'bg-amber-900 text-amber-200')}">
+              ${slide.type==='title'?'타이틀':(slide.image?'이미지':'성경')}
+            </span>
+          </div>
+          <div class="relative z-10 p-1.5 pt-0 mt-auto truncate text-[10px] text-white font-medium text-shadow pointer-events-none drop-shadow-md">
+            ${escapeHtml(contentStr)}
+          </div>
+          
+          <button class="del-btn absolute top-1 right-1 p-1 text-white bg-red-600/80 hover:bg-red-500 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20 shadow-md" title="삭제">
+            <i data-lucide="x" class="w-3 h-3"></i>
+          </button>
+          <button class="dup-btn absolute top-1 right-8 p-1 text-white bg-slate-600/80 hover:bg-amber-600 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20 shadow-md" title="복제">
+            <i data-lucide="copy" class="w-3 h-3"></i>
+          </button>
+          ${slide.type === 'scripture' ? `
+          <button class="edit-btn absolute bottom-1 right-1 p-1 text-white bg-amber-600/80 hover:bg-amber-500 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20 shadow-md" title="말씀 내용 수정">
+            <i data-lucide="pen-line" class="w-3 h-3"></i>
+          </button>` : ''}
+        `;
+        
+        t.onclick = (e) => { 
+          if(!e.target.closest('.del-btn') && !e.target.closest('.dup-btn') && !e.target.closest('.edit-btn')) { 
+              state.currentSlideIndex = idx; 
+              renderAll(); 
+          }
+        };
+        
+        // Drag and Drop implementation
+        t.addEventListener('dragstart', (e) => { 
+            draggedIdx = idx; 
+            e.dataTransfer.effectAllowed = 'move';
+            setTimeout(() => t.classList.add('opacity-30'), 0); 
+        });
+        t.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            t.classList.add('ring-2', 'ring-dashed', 'ring-amber-400');
+        });
+        t.addEventListener('dragleave', () => {
+             t.classList.remove('ring-2', 'ring-dashed', 'ring-amber-400');
+        });
+        t.addEventListener('drop', (e) => {
+          e.preventDefault();
+          t.classList.remove('ring-2', 'ring-dashed', 'ring-amber-400');
+          if (draggedIdx !== null && draggedIdx !== idx) {
+            pushHistory();
+            const moved = state.slides.splice(draggedIdx, 1)[0];
+            state.slides.splice(idx, 0, moved);
+            state.currentSlideIndex = idx;
+            renderAll();
+            saveWork();
+            showToast("슬라이드 순서가 변경되었습니다.");
+          }
+        });
+        t.addEventListener('dragend', () => t.classList.remove('opacity-30'));
+
+        // Delete button logic
+        t.querySelector('.del-btn').onclick = (e) => {
+          e.stopPropagation();
+          if(state.slides.length > 1) {
+            pushHistory();
+            state.slides.splice(idx, 1);
+            state.currentSlideIndex = Math.min(state.currentSlideIndex, state.slides.length - 1);
+            renderAll();
+            saveWork();
+            showToast("슬라이드가 삭제되었습니다. (Ctrl+Z로 되돌리기)");
+          } else {
+            showToast("최소 1개의 슬라이드는 필요합니다.", "error");
+          }
+        };
+
+        // Duplicate button logic
+        t.querySelector('.dup-btn').onclick = (e) => {
+          e.stopPropagation();
+          pushHistory();
+          const copy = JSON.parse(JSON.stringify(state.slides[idx]));
+          state.slides.splice(idx + 1, 0, copy);
+          state.currentSlideIndex = idx + 1;
+          renderAll();
+          saveWork();
+          showToast("슬라이드가 복제되었습니다.");
+        };
+
+        // Edit button logic (scripture slides)
+        const editBtn = t.querySelector('.edit-btn');
+        if (editBtn) {
+          editBtn.onclick = (e) => {
+            e.stopPropagation();
+            openSlideEditor(idx);
+          };
+        }
+
+        els.thumbContainer.appendChild(t);
+      });
+      lucide.createIcons({ root: els.thumbContainer });
+    }
+
+    function navigateSlide(dir) {
+        let newIdx = state.currentSlideIndex + dir;
+        if (newIdx >= 0 && newIdx < state.slides.length) {
+            state.currentSlideIndex = newIdx;
+            renderAll();
+        }
+    }
+
+    function handleClear() {
+        // confirm()은 제약조건에 의해 제거하고 바로 동작하도록 수정되었습니다.
+        pushHistory();
+        state.slides = [state.slides[0]];
+        state.currentSlideIndex = 0;
+        renderAll();
+        saveWork();
+        showToast("초기화 되었습니다. (Ctrl+Z로 되돌릴 수 있습니다.)");
+    }
+
+    // API Status Update
+    function setApiStatus(status) {
+        if (!els.apiStatusDot) return;
+        if (status === 'verified') {
+            els.apiStatusDot.className = "w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]";
+            els.apiStatusText.textContent = "연결됨";
+            els.apiStatusText.className = "text-green-400 font-bold";
+            els.apiStatusBadge.className = "flex items-center gap-1.5 px-2 py-1 rounded bg-green-950/40 border border-green-800/50 text-xs font-bold min-w-[75px] justify-center";
+        } else if (status === 'error') {
+            els.apiStatusDot.className = "w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]";
+            els.apiStatusText.textContent = "오류";
+            els.apiStatusText.className = "text-red-400 font-bold";
+            els.apiStatusBadge.className = "flex items-center gap-1.5 px-2 py-1 rounded bg-red-950/40 border border-red-800/50 text-xs font-bold min-w-[75px] justify-center";
+        } else {
+            els.apiStatusDot.className = "w-2 h-2 rounded-full bg-slate-500";
+            els.apiStatusText.textContent = "미확인";
+            els.apiStatusText.className = "text-slate-500 font-medium";
+            els.apiStatusBadge.className = "flex items-center gap-1.5 px-2 py-1 rounded bg-white border border-slate-700 text-xs font-medium text-slate-500 min-w-[75px] justify-center";
+        }
+    }
+
+    // API 키 관리: 사용자가 직접 입력한 키를 사용 (파일에 하드코딩 없음)
+    // 키는 브라우저 localStorage에만 저장되며 외부로 전송되지 않음
+    function getApiKey() {
+        return (els.apiKeyInput && els.apiKeyInput.value.trim()) || localStorage.getItem('gemini_api_key') || '';
+    }
+
+    // API 키 실제 검증 (가벼운 테스트 호출)
+    // ===== API 호출 (한 번만 요청, 재시도 없음 - 무료 한도 절약) =====
+    async function callGeminiApi(url, options) {
+        const res = await fetch(url, options);
+        if (res.ok) return res;
+        const err = await res.json().catch(() => ({}));
+        const msg = err.error?.message || `오류 코드 ${res.status}`;
+        // 429/503이면 사용자가 이해하기 쉽게 안내
+        if (res.status === 429) {
+            throw new Error("요청이 너무 많습니다. 1~2분 쉬었다가 다시 눌러주세요. (무료 키는 분당 약 15회 제한)");
+        }
+        if (res.status === 503) {
+            throw new Error("구글 서버가 일시적으로 바쁩니다. 잠시 후 다시 눌러주세요.");
+        }
+        throw new Error(msg);
+    }
+
+    async function verifyApiKey() {
+        const key = els.apiKeyInput.value.trim();
+        if (!key) return showToast("API 키를 입력해주세요.", "error");
+
+        els.btnVerifyApi.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>`;
+        lucide.createIcons({root: els.btnVerifyApi});
+        els.btnVerifyApi.disabled = true;
+
+        try {
+            // 모델 호출 대신 모델 목록 조회로 키 유효성 확인 (서버 과부하 영향 없음)
+            const testUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`;
+            const res = await callGeminiApi(testUrl, { method: 'GET' });
+            if (res.ok) {
+                localStorage.setItem('gemini_api_key', key);
+                localStorage.setItem('api_verified', 'true');
+                setApiStatus('verified');
+                showToast("API 키가 확인되었습니다.", "success");
+            }
+        } catch(e) {
+            console.error("키 검증 오류:", e);
+            setApiStatus('error');
+            localStorage.removeItem('api_verified');
+            showToast(`키 확인 실패:\n${e.message}`, "error", 6000);
+        } finally {
+            els.btnVerifyApi.innerHTML = "키 확인";
+            lucide.createIcons({root: els.btnVerifyApi});
+            els.btnVerifyApi.disabled = false;
+        }
+    }
+
+    // 1. Text Parsing API (다이렉트 Gemini 호출 - 사용자 키 사용)
+    async function handleParseScriptures() {
+        const text = els.content.value.trim();
+        if(!text) return showToast("설교 교안 본문을 입력해주세요.", "error");
+
+        const apiKey = getApiKey();
+        if (!apiKey) return showToast("먼저 상단에서 Gemini API 키를 입력하고 확인해주세요.\n(Google AI Studio에서 무료 발급 가능)", "error", 6000);
+
+        setLoading(els.btnParse, els.btnParse.querySelector('#parse-spinner'), els.btnParse.querySelector('#parse-icon'), els.btnParse.querySelector('#parse-btn-text'), "말씀 추출 중...", true);
+        
+        try {
+            const prompt = `당신은 신학적 지식을 갖춘 조수입니다. 다음 설교 텍스트를 읽고, 언급된 모든 '성경 구절(Bible Verses)'을 추출하세요.
+성경 구절이 여러 절일 경우, PPT 슬라이드에 표시하기 좋게 1~2절씩 나누어 주세요.
+
+결과는 반드시 아래 JSON 구조로만 반환하세요 (마크다운 없이 순수 JSON만):
+{
+  "slides": [
+    {
+      "type": "scripture",
+      "heading": "설교의 핵심 문맥 (예: 회개와 용서)",
+      "reference": "성경 장절 (예: 누가복음 15장 11-12절)",
+      "verseContent": "[11절] 어떤 사람에게 두 아들이 있는데... [12절] 그 둘째가 아버지에게 말하되..."
+    }
+  ]
+}
+
+설교 텍스트:
+${text}`;
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { responseMimeType: "application/json" }
+            };
+
+            const response = await callGeminiApi(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) throw new Error(`서버 응답 오류 (${response.status})`);
+            
+            const result = await response.json();
+            let jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            
+            if (!jsonText) throw new Error("AI 응답을 받지 못했습니다.");
+            
+            // 혹시 모를 마크다운 잔재 제거
+            jsonText = jsonText.replace(/```json/gi, '').replace(/```/g, '').trim();
+            const parsedData = JSON.parse(jsonText);
+            
+            if (parsedData.slides && parsedData.slides.length > 0) {
+                pushHistory();
+                // 긴 구절은 2절씩 자동 분할
+                const splitSlides = [];
+                parsedData.slides.forEach(s => {
+                    if (s.type === 'scripture' && s.verseContent) {
+                        splitSlides.push(...splitLongVerseSlide(s));
+                    } else {
+                        splitSlides.push(s);
+                    }
+                });
+                state.slides.push(...splitSlides);
+                state.currentSlideIndex = state.slides.length - splitSlides.length;
+                renderAll();
+                saveWork();
+                const splitMsg = splitSlides.length > parsedData.slides.length ? ` (긴 구절 ${splitSlides.length - parsedData.slides.length}장 분할됨)` : '';
+                showToast(`${splitSlides.length}장의 성경 슬라이드가 자동 생성되었습니다.${splitMsg}`, "success");
+            } else {
+                showToast("텍스트에서 명확한 성경 구절을 찾지 못했습니다.", "warning");
+            }
+
+        } catch(e) { 
+            console.error("추출 오류:", e);
+            showToast(`성경 추출 실패:\n${e.message}`, "error", 6000); 
+        } finally {
+            setLoading(els.btnParse, els.btnParse.querySelector('#parse-spinner'), els.btnParse.querySelector('#parse-icon'), els.btnParse.querySelector('#parse-btn-text'), "성경구절 전용 자동 추출 & 슬라이드 생성", false);
+        }
+    }
+
+    // 2. Image Generation API (다이렉트 Gemini 호출 - 사용자 키 사용)
+    // ===== Slide content editor (for fixing AI output manually) =====
+    function openSlideEditor(idx) {
+        const slide = state.slides[idx];
+        if (!slide || slide.type !== 'scripture') return;
+
+        const overlay = document.createElement('div');
+        overlay.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4';
+        overlay.innerHTML = `
+          <div class="glass-panel rounded-2xl p-6 w-full max-w-lg space-y-4 shadow-2xl">
+            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="pen-line" class="w-5 h-5 text-amber-500"></i> 말씀 내용 수정
+            </h3>
+            <div>
+              <label class="text-xs text-slate-500 mb-1 block">소제목</label>
+              <input type="text" id="edit-heading" value="${escapeHtml(slide.heading || '')}" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-base text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/50">
+            </div>
+            <div>
+              <label class="text-xs text-slate-500 mb-1 block">성경 장절</label>
+              <input type="text" id="edit-reference" value="${escapeHtml(slide.reference || '')}" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-base text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/50">
+            </div>
+            <div>
+              <label class="text-xs text-slate-500 mb-1 block">말씀 내용</label>
+              <textarea id="edit-content" rows="5" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-base text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none">${escapeHtml(slide.verseContent || '')}</textarea>
+            </div>
+            <div class="flex gap-2 justify-end">
+              <button id="edit-cancel" class="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold transition">취소</button>
+              <button id="edit-save" class="px-4 py-2 rounded-lg bg-[#d97b3c] hover:bg-[#c06a2f] text-white text-sm font-semibold transition">저장</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+        lucide.createIcons({ root: overlay });
+
+        overlay.querySelector('#edit-cancel').onclick = () => overlay.remove();
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+        overlay.querySelector('#edit-save').onclick = () => {
+            pushHistory();
+            slide.heading = overlay.querySelector('#edit-heading').value.trim() || '본문 말씀';
+            slide.reference = overlay.querySelector('#edit-reference').value.trim();
+            slide.verseContent = overlay.querySelector('#edit-content').value.trim();
+            overlay.remove();
+            renderAll();
+            saveWork();
+            showToast("저장되었습니다.", "success");
+        };
+        setTimeout(() => overlay.querySelector('#edit-content').focus(), 100);
+    }
+
+    // ===== Undo/Redo History =====
+    const history = { stack: [], index: -1, max: 50 };
+
+    function pushHistory() {
+        history.stack = history.stack.slice(0, history.index + 1);
+        history.stack.push(JSON.stringify({ slides: state.slides, idx: state.currentSlideIndex }));
+        if (history.stack.length > history.max) history.stack.shift();
+        history.index = history.stack.length - 1;
+        updateUndoButtons();
+    }
+
+    function undo() {
+        if (history.index > 0) {
+            history.index--;
+            const s = JSON.parse(history.stack[history.index]);
+            state.slides = s.slides;
+            state.currentSlideIndex = Math.min(s.idx, state.slides.length - 1);
+            renderAll();
+            saveWork();
+            updateUndoButtons();
+            showToast("실행 취소되었습니다.");
+        }
+    }
+
+    function redo() {
+        if (history.index < history.stack.length - 1) {
+            history.index++;
+            const s = JSON.parse(history.stack[history.index]);
+            state.slides = s.slides;
+            state.currentSlideIndex = Math.min(s.idx, state.slides.length - 1);
+            renderAll();
+            saveWork();
+            updateUndoButtons();
+            showToast("다시 실행되었습니다.");
+        }
+    }
+
+    function updateUndoButtons() {
+        const btnU = document.getElementById('btn-undo');
+        const btnR = document.getElementById('btn-redo');
+        if (btnU) btnU.disabled = history.index <= 0;
+        if (btnR) btnR.disabled = history.index >= history.stack.length - 1;
+        if (btnU) btnU.classList.toggle('opacity-40', btnU.disabled);
+        if (btnR) btnR.classList.toggle('opacity-40', btnR.disabled);
+    }
+
+    // ===== Long verse auto-split (2 verses per slide) =====
+    function splitLongVerseSlide(slide) {
+        // [N절] 마커 기준으로 나누기
+        const verseRegex = /\[(\d+)절\]/g;
+        const verses = [];
+        let lastIdx = 0, m;
+        const markers = [];
+        while ((m = verseRegex.exec(slide.verseContent)) !== null) {
+            markers.push({ num: m[1], idx: m.index, len: m[0].length });
+        }
+        if (markers.length <= 2) return [slide]; // 2절 이하면 그대로
+
+        for (let i = 0; i < markers.length; i++) {
+            const start = markers[i].idx;
+            const end = (i + 1 < markers.length) ? markers[i + 1].idx : slide.verseContent.length;
+            verses.push(slide.verseContent.substring(start, end).trim());
+        }
+        // 2절씩 묶기
+        const result = [];
+        for (let i = 0; i < verses.length; i += 2) {
+            const chunk = verses.slice(i, i + 2).join(' ');
+            result.push({
+                type: 'scripture',
+                heading: slide.heading + (result.length > 0 ? ` (${result.length + 1})` : ''),
+                reference: slide.reference,
+                verseContent: chunk,
+                textSize: slide.textSize || 'md'
+            });
+        }
+        return result;
+    }
+
+    // ===== Font size adjustment =====
+    const TEXT_SIZES = ['sm', 'md', 'lg'];
+    function adjustFontSize(dir) {
+        const slide = state.slides[state.currentSlideIndex];
+        if (!slide) return;
+        const cur = TEXT_SIZES.indexOf(slide.textSize || 'md');
+        const next = Math.min(2, Math.max(0, cur + dir));
+        if (next === cur) return showToast(dir > 0 ? "이미 가장 큰 글자입니다." : "이미 가장 작은 글자입니다.");
+        pushHistory();
+        slide.textSize = TEXT_SIZES[next];
+        renderAll();
+        saveWork();
+        showToast(`글자 크기: ${next === 0 ? '작게' : next === 1 ? '보통' : '크게'}`);
+    }
+
+    // ===== PDF export (via browser print) =====
+    function exportToPDF() {
+        if (state.slides.length === 0) return showToast("내보낼 슬라이드가 없습니다.", "error");
+        // 인쇄용 스타일 추가
+        let printStyle = document.getElementById('print-pdf-style');
+        if (!printStyle) {
+            printStyle = document.createElement('style');
+            printStyle.id = 'print-pdf-style';
+            printStyle.textContent = `
+              @media print {
+                body * { visibility: hidden; }
+                #print-pdf-area, #print-pdf-area * { visibility: visible; }
+                #print-pdf-area { position: absolute; left: 0; top: 0; width: 100%; }
+                .pdf-page { page-break-after: always; width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden; }
+                .pdf-page:last-child { page-break-after: avoid; }
+              }
+            `;
+            document.head.appendChild(printStyle);
+        }
+        // 현재 스테이지 렌더링을 이용해 각 슬라이드를 인쇄 영역에 복제
+        const savedIdx = state.currentSlideIndex;
+        const area = document.createElement('div');
+        area.id = 'print-pdf-area';
+        area.style.display = 'none';
+        document.body.appendChild(area);
+
+        const pal = THEME_PALETTES[state.theme];
+        state.slides.forEach((slide) => {
+            state.currentSlideIndex = state.slides.indexOf(slide);
+            renderSlideStage();
+            const page = document.createElement('div');
+            page.className = 'pdf-page';
+            page.innerHTML = els.stage.outerHTML;
+            // outerHTML 복사본에서 id 중복 제거
+            page.querySelector('#slide-stage')?.removeAttribute('id');
+            area.appendChild(page);
+        });
+
+        state.currentSlideIndex = savedIdx;
+        renderSlideStage();
+        area.style.display = 'block';
+        showToast("인쇄 창에서 'PDF로 저장'을 선택하세요.", "success", 5000);
+        setTimeout(() => {
+            window.print();
+            setTimeout(() => area.remove(), 1000);
+        }, 300);
+    }
+
+    function setLoading(btn, spinner, icon, textEl, text, isLoading) {
+        if(isLoading) {
+            btn.disabled = true;
+            btn.classList.add('opacity-80', 'cursor-not-allowed');
+            spinner.classList.remove('hidden');
+            icon.classList.add('hidden');
+            textEl.textContent = text;
+        } else {
+            btn.disabled = false;
+            btn.classList.remove('opacity-80', 'cursor-not-allowed');
+            spinner.classList.add('hidden');
+            icon.classList.remove('hidden');
+            textEl.textContent = text;
+        }
+    }
+
+    async function exportToPPTX() {
+        if (state.slides.length === 0) return showToast("내보낼 슬라이드가 없습니다.", "error");
+        
+        const originalText = els.btnExport.innerHTML;
+        els.btnExport.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> 파일 생성 중...`;
+        els.btnExport.disabled = true;
+        lucide.createIcons({root: els.btnExport});
+
+        try {
+            const pptx = new PptxGenJS();
+            pptx.layout = state.aspect === '4x3' ? 'LAYOUT_4x3' : 'LAYOUT_16x9';
+            // 문서 정보 (PowerPoint에서 파일 인식 개선)
+            pptx.author = 'GraceSlide Pro';
+            pptx.company = 'GraceSlide';
+            pptx.subject = els.title.value.trim() || '설교 PPT';
+            pptx.title = `GraceSlide - ${els.title.value.trim() || '설교'}`;
+            const pal = THEME_PALETTES[state.theme];
+            const isDark = pal.isDark;
+            // 모든 텍스트 요소는 개별 텍스트 상자로 저장되어 PowerPoint에서 직접 수정 가능
+
+            for (const slide of state.slides) {
+                const s = pptx.addSlide();
+                
+                // Base background color
+                s.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: '100%', h: '100%', fill: { color: pal.bg } });
+
+                if (slide.type === 'title') {
+                    // 미리보기와 동일한 레이아웃: 상단 악센트 바 + 큰 제목 + 부제목
+                    // 악센트 바 (가로선)
+                    s.addShape(pptx.ShapeType.rect, {
+                        x: 4.65, y: 2.2, w: 0.7, h: 0.06,
+                        fill: { color: pal.accent }, line: { color: pal.accent }
+                    });
+                    s.addText(slide.title || '', {
+                        x: 0.5, y: 2.5, w: '90%', h: 1.8,
+                        fontSize: 48, color: pal.text, bold: true, align: 'center',
+                        fontFace: '바탕', valign: 'middle'
+                    });
+                    s.addText(slide.subtitle || '', {
+                        x: 0.5, y: 4.5, w: '90%', h: 0.8,
+                        fontSize: 22, color: pal.subText, align: 'center',
+                        fontFace: '맑은 고딕', valign: 'middle', charSpacing: 1
+                    });
+                } 
+                else if (slide.type === 'scripture') {
+                    const headingText = slide.heading || '본문 말씀';
+                    const refText = slide.reference || '';
+                    const verseText = (slide.verseContent || '').replace(/\[(\d+)절\]/g, '$1절 ');
+                    const bodyFont = slide.bodyFont || 'Noto Serif KR';
+                    const align = slide.textAlign === 'left' ? 'left' : (slide.textAlign === 'right' ? 'right' : 'center');
+                    const layout = slide.scriptureLayout || 'full';
+                    const pptFontSize = slide.textSize === 'sm' ? 20 : (slide.textSize === 'lg' ? 32 : 26);
+
+                    let tx, tw;
+                    if (layout === 'full') {
+                        tx = 1.0; tw = 8.0;
+                    } else if (layout === 'left_text') {
+                        tx = 0.5; tw = 4.2;
+                        s.addShape(pptx.shapes.RECTANGLE, { x: 5.2, y: 0.5, w: 4.3, h: 4.6, fill: { color: pal.bg }, line: { color: '888888', width: 1, dashType: 'dash' } });
+                        s.addText('이미지 자리\n(PPT에서 사진 넣으세요)', { x: 5.2, y: 2.0, w: 4.3, h: 1.6, fontSize: 14, color: '888888', align: 'center', valign: 'middle', fontFace: '맑은 고딕' });
+                    } else {
+                        tx = 5.3; tw = 4.2;
+                        s.addShape(pptx.shapes.RECTANGLE, { x: 0.5, y: 0.5, w: 4.3, h: 4.6, fill: { color: pal.bg }, line: { color: '888888', width: 1, dashType: 'dash' } });
+                        s.addText('이미지 자리\n(PPT에서 사진 넣으세요)', { x: 0.5, y: 2.0, w: 4.3, h: 1.6, fontSize: 14, color: '888888', align: 'center', valign: 'middle', fontFace: '맑은 고딕' });
+                    }
+
+                    const badgeWidth = Math.max(2.0, Math.min(4.5, headingText.length * 0.22 + 1.0));
+                    const badgeX = layout === 'full' ? (10 - badgeWidth) / 2 : (tx + (tw - badgeWidth) / 2);
+                    s.addText(headingText, { x: badgeX, y: 0.5, w: badgeWidth, h: 0.45, fontSize: 13, color: 'FF3333', bold: true, align: 'center', valign: 'middle', fontFace: '맑은 고딕', fill: { color: pal.accent } });
+                    s.addText(refText, { x: tx, y: 1.15, w: tw, h: 0.7, fontSize: 26, color: pal.accent, bold: true, align: align, valign: 'middle', fontFace: '맑은 고딕' });
+                    const lineW = 2.0;
+                    const lineX = align === 'left' ? tx : (align === 'right' ? tx + tw - lineW : tx + (tw - lineW) / 2);
+                    s.addShape(pptx.shapes.RECTANGLE, { x: lineX, y: 1.95, w: lineW, h: 0.03, fill: { color: '888888' }, line: { color: '888888' } });
+                    s.addText(verseText, { x: tx, y: 2.2, w: tw, h: 4.8, fontSize: pptFontSize, color: pal.text, align: align, valign: 'middle', wrap: true, fontFace: (bodyFont === 'Noto Serif KR' ? '바탕' : (bodyFont === 'Noto Sans KR' ? '맑은 고딕' : (bodyFont === 'Nanum Myeongjo' ? '바탕' : '맑은 고딕'))), lineSpacingMultiple: 1.5 });
+                }
+                else if (slide.image) {
+                    if (slide.type === 'image_only') {
+                        s.addImage({ path: slide.image, x: 0, y: 0, w: '100%', h: '100%', sizing: { type: 'cover' } });
+                    }
+                    else if (slide.type === 'split_left_text') {
+                        s.addImage({ path: slide.image, x: '50%', y: 0, w: '50%', h: '100%', sizing: { type: 'cover' } });
+                        s.addText(slide.verseContent || '', { x: 0.5, y: 1.5, w: '40%', h: 4.5, fontSize: 32, color: pal.text, align: 'left', wrap: true, fontFace: '바탕', bold: true });
+                    }
+                    else if (slide.type === 'split_right_text') {
+                        s.addImage({ path: slide.image, x: 0, y: 0, w: '50%', h: '100%', sizing: { type: 'cover' } });
+                        s.addText(slide.verseContent || '', { x: '55%', y: 1.5, w: '40%', h: 4.5, fontSize: 32, color: pal.text, align: 'right', wrap: true, fontFace: '바탕', bold: true });
+                    }
+                    else if (slide.type === 'split_top_text') {
+                        s.addText(slide.verseContent || '', { x: 0.5, y: 0.5, w: '90%', h: 2.0, fontSize: 32, color: pal.text, align: 'center', wrap: true, fontFace: '바탕', bold: true });
+                        s.addImage({ path: slide.image, x: 0, y: 3.0, w: '100%', h: 4.5, sizing: { type: 'cover' } });
+                    }
+                    else if (slide.type === 'split_bottom_text') {
+                        s.addImage({ path: slide.image, x: 0, y: 0, w: '100%', h: 4.5, sizing: { type: 'cover' } });
+                        s.addText(slide.verseContent || '', { x: 0.5, y: 5.0, w: '90%', h: 2.0, fontSize: 32, color: pal.text, align: 'center', wrap: true, fontFace: '바탕', bold: true });
+                    }
+                    else if (slide.type === 'polaroid') {
+                        s.addShape(pptx.ShapeType.rect, { x: 1.5, y: 0.5, w: 7, h: 6.5, fill: { color: 'FFFFFF' }, shadow: { type: 'outer', color: '000000', opacity: 0.3, blur: 10, offset: 5 } });
+                        s.addImage({ path: slide.image, x: 2.0, y: 1.0, w: 6, h: 4, sizing: { type: 'cover' } });
+                        s.addText(slide.verseContent || '', { x: 2.0, y: 5.2, w: 6, h: 1.5, fontSize: 24, color: '000000', align: 'center', wrap: true, fontFace: '바탕', bold: true });
+                    }
+                    else if (slide.type === 'side_banner_left') {
+                        s.addImage({ path: slide.image, x: 0, y: 0, w: '33%', h: '100%', sizing: { type: 'cover' } });
+                        s.addText(slide.verseContent || '', { x: '35%', y: 1.5, w: '60%', h: 4.5, fontSize: 32, color: pal.text, align: 'left', wrap: true, fontFace: '바탕', bold: true });
+                    }
+                    else if (slide.type === 'side_banner_right') {
+                        s.addText(slide.verseContent || '', { x: '5%', y: 1.5, w: '60%', h: 4.5, fontSize: 32, color: pal.text, align: 'right', wrap: true, fontFace: '바탕', bold: true });
+                        s.addImage({ path: slide.image, x: '67%', y: 0, w: '33%', h: '100%', sizing: { type: 'cover' } });
+                    }
+                    else if (slide.type === 'overlay_bottom') {
+                        s.addImage({ path: slide.image, x: 0, y: 0, w: '100%', h: '100%', sizing: { type: 'cover' } });
+                        s.addShape(pptx.ShapeType.rect, { x: 0, y: '70%', w: '100%', h: '30%', fill: { color: isDark ? '000000' : 'FFFFFF', transparency: 15 } });
+                        s.addText(slide.verseContent || '', { x: 0.5, y: '75%', w: '90%', h: '20%', fontSize: 32, color: isDark ? 'FFFFFF' : '000000', align: 'center', wrap: true, fontFace: '바탕', bold: true });
+                    }
+                    else if (slide.type === 'overlay_left') {
+                        s.addImage({ path: slide.image, x: 0, y: 0, w: '100%', h: '100%', sizing: { type: 'cover' } });
+                        s.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: '40%', h: '100%', fill: { color: isDark ? '000000' : 'FFFFFF', transparency: 15 } });
+                        s.addText(slide.verseContent || '', { x: '3%', y: 1.5, w: '34%', h: 4.5, fontSize: 32, color: isDark ? 'FFFFFF' : '000000', align: 'left', wrap: true, fontFace: '바탕', bold: true });
+                    }
+                    else if (slide.type === 'overlay_right') {
+                        s.addImage({ path: slide.image, x: 0, y: 0, w: '100%', h: '100%', sizing: { type: 'cover' } });
+                        s.addShape(pptx.ShapeType.rect, { x: '60%', y: 0, w: '40%', h: '100%', fill: { color: isDark ? '000000' : 'FFFFFF', transparency: 15 } });
+                        s.addText(slide.verseContent || '', { x: '63%', y: 1.5, w: '34%', h: 4.5, fontSize: 32, color: isDark ? 'FFFFFF' : '000000', align: 'right', wrap: true, fontFace: '바탕', bold: true });
+                    }
+                    else if (slide.type === 'margin_frame') {
+                        s.addImage({ path: slide.image, x: '5%', y: '5%', w: '90%', h: '65%', sizing: { type: 'cover' } });
+                        s.addText(slide.verseContent || '', { x: 0.5, y: '75%', w: '90%', h: 1.5, fontSize: 32, color: pal.text, align: 'center', wrap: true, fontFace: '바탕', bold: true });
+                    }
+                    else if (slide.type === 'floating_card') {
+                        s.addImage({ path: slide.image, x: 0, y: 0, w: '100%', h: '100%', sizing: { type: 'cover' } });
+                        s.addShape(pptx.ShapeType.rect, { x: '15%', y: '25%', w: '70%', h: '50%', fill: { color: isDark ? '0F172A' : 'FFFFFF', transparency: 10 }, shadow: { type: 'outer', color: '000000', opacity: 0.4, blur: 15, offset: 5 } });
+                        s.addText(slide.verseContent || '', { x: '18%', y: '30%', w: '64%', h: '40%', fontSize: 32, color: isDark ? 'FFFFFF' : '000000', align: 'center', wrap: true, fontFace: '바탕', bold: true });
+                    }
+                    else if (slide.type === 'top_title_bottom_img') {
+                        s.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: '100%', h: '15%', fill: { color: pal.bg } });
+                        s.addText(slide.verseContent || '', { x: 0.5, y: '3%', w: '90%', h: '10%', fontSize: 24, color: pal.text, align: 'left', wrap: true, fontFace: '바탕', bold: true });
+                        s.addImage({ path: slide.image, x: 0, y: '15%', w: '100%', h: '85%', sizing: { type: 'cover' } });
+                    }
+                    else if (slide.type === 'circle_frame') {
+                        s.addImage({ path: slide.image, x: '35%', y: '8%', w: '30%', h: '53%', sizing: { type: 'cover' } });
+                        s.addShape(pptx.ShapeType.ellipse, { x: '35%', y: '8%', w: '30%', h: '53%', fill: { color: 'FFFFFF', transparency: 100 }, line: { color: pal.accent, width: 4 } });
+                        s.addText(slide.verseContent || '', { x: '10%', y: '68%', w: '80%', h: '25%', fontSize: 28, color: pal.text, align: 'center', wrap: true, fontFace: '바탕', bold: true });
+                    }
+                    else if (slide.type === 'diagonal_split') {
+                        s.addImage({ path: slide.image, x: 0, y: 0, w: '55%', h: '100%', sizing: { type: 'cover' } });
+                        s.addText(slide.verseContent || '', { x: '55%', y: 1.5, w: '40%', h: 4.5, fontSize: 30, color: pal.text, align: 'right', wrap: true, fontFace: '바탕', bold: true });
+                    }
+                    else if (slide.type === 'top_text_strip') {
+                        s.addText(slide.verseContent || '', { x: 0.5, y: 0.8, w: '90%', h: 4.0, fontSize: 32, color: pal.text, align: 'center', wrap: true, fontFace: '바탕', bold: true });
+                        s.addImage({ path: slide.image, x: 0, y: '78%', w: '100%', h: '22%', sizing: { type: 'cover' } });
+                    }
+                    else if (slide.type === 'dual_text') {
+                        s.addText(slide.verseContent || '', { x: '2%', y: 1.5, w: '29%', h: 4.5, fontSize: 20, color: pal.text, align: 'right', wrap: true, fontFace: '바탕', bold: true });
+                        s.addImage({ path: slide.image, x: '33%', y: 0, w: '34%', h: '100%', sizing: { type: 'cover' } });
+                        s.addText(slide.verseContent || '', { x: '69%', y: 1.5, w: '29%', h: 4.5, fontSize: 20, color: pal.text, align: 'left', wrap: true, fontFace: '바탕', bold: true });
+                    }
+                    else if (slide.type === 'vertical_card') {
+                        s.addShape(pptx.ShapeType.roundRect, { x: '32%', y: '5%', w: '36%', h: '90%', fill: { color: isDark ? '0F172A' : 'FFFFFF' }, shadow: { type: 'outer', color: '000000', opacity: 0.3, blur: 12, offset: 4 } });
+                        s.addImage({ path: slide.image, x: '32%', y: '5%', w: '36%', h: '45%', sizing: { type: 'cover' } });
+                        s.addText(slide.verseContent || '', { x: '35%', y: '55%', w: '30%', h: '35%', fontSize: 22, color: isDark ? 'FFFFFF' : '000000', align: 'center', wrap: true, fontFace: '바탕', bold: true });
+                    }
+                    else if (slide.type === 'gradient_fade') {
+                        s.addImage({ path: slide.image, x: 0, y: 0, w: '100%', h: '100%', sizing: { type: 'cover' } });
+                        s.addShape(pptx.ShapeType.rect, { x: 0, y: '45%', w: '100%', h: '55%', fill: { color: isDark ? '000000' : 'FFFFFF', transparency: 25 } });
+                        s.addText(slide.verseContent || '', { x: 0.5, y: '60%', w: '90%', h: '30%', fontSize: 32, color: isDark ? 'FFFFFF' : '000000', align: 'center', wrap: true, fontFace: '바탕', bold: true });
+                    }
+                    else if (slide.type === 'corner_frame') {
+                        s.addImage({ path: slide.image, x: 0, y: 0, w: '100%', h: '100%', sizing: { type: 'cover' } });
+                        s.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: '100%', h: '100%', fill: { color: isDark ? '000000' : 'FFFFFF', transparency: 45 } });
+                        s.addShape(pptx.ShapeType.rect, { x: '8%', y: '12%', w: '84%', h: '76%', fill: { color: 'FFFFFF', transparency: 100 }, line: { color: pal.accent, width: 3 } });
+                        s.addText(slide.verseContent || '', { x: '12%', y: '30%', w: '76%', h: '40%', fontSize: 30, color: isDark ? 'FFFFFF' : '000000', align: 'center', wrap: true, fontFace: '바탕', bold: true });
+                    }
+                    else if (slide.type === 'triple_split') {
+                        s.addImage({ path: slide.image, x: 0, y: 0, w: '33%', h: '100%', sizing: { type: 'cover' } });
+                        s.addImage({ path: slide.image, x: '67%', y: 0, w: '33%', h: '100%', sizing: { type: 'cover' } });
+                        s.addText(slide.verseContent || '', { x: '35%', y: 1.5, w: '30%', h: 4.5, fontSize: 28, color: pal.text, align: 'center', wrap: true, fontFace: '바탕', bold: true });
+                    }
+                    else if (slide.type === 'ribbon_title') {
+                        s.addImage({ path: slide.image, x: 0, y: 0, w: '100%', h: '100%', sizing: { type: 'cover' } });
+                        s.addShape(pptx.ShapeType.rect, { x: '20%', y: '8%', w: '60%', h: '12%', fill: { color: pal.accent } });
+                        s.addText(slide.verseContent || '', { x: '22%', y: '9%', w: '56%', h: '10%', fontSize: 22, color: pal.bg, align: 'center', wrap: true, fontFace: '맑은 고딕', bold: true });
+                    }
+                    else if (slide.type === 'book_spread') {
+                        s.addShape(pptx.ShapeType.roundRect, { x: '5%', y: '10%', w: '90%', h: '80%', fill: { color: isDark ? '1A1A2E' : 'FAF6F0' }, shadow: { type: 'outer', color: '000000', opacity: 0.3, blur: 12, offset: 4 } });
+                        s.addImage({ path: slide.image, x: '5%', y: '10%', w: '45%', h: '80%', sizing: { type: 'cover' } });
+                        s.addText(slide.verseContent || '', { x: '53%', y: '25%', w: '40%', h: '50%', fontSize: 28, color: isDark ? 'FFFFFF' : '2A2A2A', align: 'left', wrap: true, fontFace: '바탕', bold: true });
+                    }
+                    else {
+                        // full bg with text overlay
+                        s.addImage({ path: slide.image, x: 0, y: 0, w: '100%', h: '100%', sizing: { type: 'cover' } });
+                        // Add overlay shape for text readability
+                        s.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: '100%', h: '100%', fill: { color: isDark ? '000000' : 'FFFFFF', transparency: 30 } });
+                        s.addText(slide.verseContent || '', { x: 1, y: 2.0, w: '80%', h: 3.5, fontSize: 36, color: isDark ? 'FFFFFF' : '000000', align: 'center', wrap: true, bold: true, fontFace: '바탕', shadow: { type: 'outer', color: isDark ? '000000' : 'FFFFFF', opacity: 0.8, blur: 5, offset: 2 } });
+                    }
+                }
+            }
+            
+            const rawTitle = (state.slides[0] && state.slides[0].title) || 'Sermon';
+            const safeTitle = rawTitle.replace(/[\\/:*?"<>|]/g, '_').trim() || 'Sermon';
+            const fileName = `GraceSlide_${safeTitle}.pptx`;
+            await pptx.writeFile({ fileName: fileName });
+            showToast("PPTX 파일이 성공적으로 다운로드되었습니다.<br>PowerPoint에서 텍스트를 직접 수정할 수 있습니다.", "success");
+        } catch (e) {
+            console.error(e);
+            showToast(`PPTX 생성 실패: ${e.message}`, "error");
+        } finally {
+            els.btnExport.innerHTML = originalText;
+            els.btnExport.disabled = false;
+            lucide.createIcons({root: els.btnExport});
+        }
+    }
+
+    async function downloadCurrentSlideAsImage() {
+        const slide = state.slides[state.currentSlideIndex];
+        if (!slide) return;
+        
+        // We will use HTML2Canvas to capture the stage HTML and download it as PNG
+        // First we need to load html2canvas dynamically
+        const oldHtml = els.btnDownloadImg.innerHTML;
+        els.btnDownloadImg.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> 처리중...';
+        lucide.createIcons({root: els.btnDownloadImg});
+
+        try {
+            if (typeof html2canvas === 'undefined') {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+            }
+
+            // PPT 스테이지 렌더링이 완료될 때까지 약간의 지연(이미지 로딩 대기)
+            await new Promise(r => setTimeout(r, 300));
+
+            const canvas = await html2canvas(els.stage, {
+                scale: 2, // High resolution
+                useCORS: true,
+                allowTaint: true, // 크로스 도메인 이미지 렌더링 허용
+                backgroundColor: null,
+                logging: false
+            });
+
+            const link = document.createElement('a');
+            link.download = `Slide_${state.currentSlideIndex + 1}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            showToast("이미지 파일이 성공적으로 저장되었습니다.", "success");
+
+        } catch (e) {
+            console.error("Image capture error:", e);
+            
+            // Fallback for image_only mode if html2canvas fails due to some reason
+            if (slide.image && slide.type === 'image_only') {
+                 const link = document.createElement('a');
+                 link.download = `Background_${state.currentSlideIndex + 1}.png`;
+                 link.href = slide.image;
+                 link.click();
+                 showToast("원본 배경 이미지가 저장되었습니다.", "success");
+            } else {
+                 showToast("이미지 저장 중 오류가 발생했습니다.", "error");
+            }
+        } finally {
+            els.btnDownloadImg.innerHTML = oldHtml;
+            lucide.createIcons({root: els.btnDownloadImg});
+        }
+    }
+
+    function loadSample() {
+        els.title.value = "돌아온 탕자";
+        els.speaker.value = "김목사 | 행복교회";
+        els.content.value = `오늘 본문인 누가복음 15장에 나오는 탕자의 비유를 살펴보겠습니다.
+누가복음 15장 11-12절에 보면 "어떤 사람에게 두 아들이 있는데 그 둘째가 아비에게 말하되 아버지여 재산 중에서 내게 돌아올 분깃을 내게 주소서 하는지라 아비가 그 살림을 각각 나눠 주었더니" 라고 기록되어 있습니다. 
+
+아버지는 아들을 사랑하기에 자유를 주었지만, 아들은 먼 나라로 떠나 허랑방탕하게 재산을 낭비합니다. 결국 돼지가 먹는 쥐엄열매조차 먹지 못하는 비참한 신세가 되죠.
+그제서야 그는 깨닫습니다. 누가복음 15장 17절입니다. "이에 스스로 돌이켜 가로되 내 아버지에게는 양식이 풍족한 품꾼이 얼마나 많은고 나는 여기서 주려 죽는구나".
+
+결국 돌아온 아들을 향해 아버지는 어떻게 반응합니까? 아직 거리가 먼데도 달려가 목을 안고 입을 맞춥니다. 바로 이것이 우리를 향한 하나님의 사랑입니다.`;
+        updateTitleSlide();
+        showToast("샘플 텍스트가 채워졌습니다. '추출' 버튼을 눌러보세요.");
+    }
+
+    // Run initialization
+    init();
+  </script>
+</body>
+</html>
