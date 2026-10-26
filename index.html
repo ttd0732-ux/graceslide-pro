@@ -196,6 +196,10 @@
             <option value="left_text">왼쪽 텍스트 + 오른쪽 이미지칸</option>
             <option value="right_text">왼쪽 이미지칸 + 오른쪽 텍스트</option>
           </select>
+          <button id="btn-scripture-image" class="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold hover:bg-amber-50 transition-colors whitespace-nowrap" title="제미나이에서 만든 그림을 불러와 이미지칸에 넣기">그림 불러오기</button>
+          <button id="btn-image-smaller" class="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold hover:bg-amber-50 transition-colors whitespace-nowrap" title="이미지칸 사진을 10%씩 작게">사진 작게</button>
+          <button id="btn-image-bigger" class="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold hover:bg-amber-50 transition-colors whitespace-nowrap" title="이미지칸 사진을 10%씩 크게">사진 크게</button>
+          <input type="file" id="scripture-image-input" accept="image/*" class="hidden">
         </div>
 
         <div class="flex items-center space-x-3 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-800">
@@ -277,11 +281,12 @@
         </div>
         <div>
           <h3 class="font-bold text-slate-900 mb-2 flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-amber-500 text-white text-xs flex items-center justify-center font-bold">4</span> 슬라이드 다듬기</h3>
-          <p class="ml-8 leading-relaxed">상단 도구모음에서 <b>성경 폰트</b>(명조/고딕/나눔명조/나눔고딕), <b>정렬</b>(왼쪽/가운데/오른쪽), <b>성경 레이아웃</b>(전체 텍스트/왼쪽 텍스트+오른쪽 이미지칸/왼쪽 이미지칸+오른쪽 텍스트)을 바꿀 수 있습니다. 제목 뱃지·장절·본문은 서로 다른 색으로 표시됩니다. 이미지칸은 PPT에서 사진을 넣는 자리입니다.</p>
+          <p class="ml-8 leading-relaxed">상단 도구모음에서 <b>성경 폰트</b>(명조/고딕/나눔명조/나눔고딕), <b>정렬</b>(왼쪽/가운데/오른쪽), <b>성경 레이아웃</b>(전체 텍스트/왼쪽 텍스트+오른쪽 이미지칸/왼쪽 이미지칸+오른쪽 텍스트)을 바꿀 수 있습니다. 제목 뱃지·장절·본문은 서로 다른 색으로 표시됩니다. 이미지칸에는 '그림 불러오기'로 불러온 그림이 들어갑니다. 그림은 불러온 그 슬라이드에만 적용되고 다른 슬라이드에는 적용되지 않습니다. 분할 레이아웃을 선택하면 이미지칸에 표시되고, 이미지칸을 클릭해도 그림을 바꿀 수 있습니다. 이미지칸 사진은 기본으로 전체가 보이게 표시되며, '사진 작게/크게' 버튼으로 10%씩 자유롭게 줄이고 키울 수 있습니다.</p>
           <ul class="ml-8 space-y-1 text-slate-600 list-disc list-inside">
             <li>썸네일 드래그로 순서 변경, ✕ 삭제, 복사 버튼으로 복제</li>
             <li>연필 버튼으로 말씀 내용 직접 수정</li>
-            <li>상단 A 버튼으로 글자 크기 조절 (작게/보통/크게)</li>
+            <li>상단 A 버튼으로 글자 크기 조절 (끝없이 작게/크게, 보통보다 N단계로 표시)</li>
+            <li>사진 작게/크게 버튼으로 이미지칸 사진 크기 조절 (10%씩, 크게는 제한 없음)</li>
             <li>Ctrl+Z로 실행 취소, Ctrl+Y로 다시 실행</li>
             <li>작업은 자동으로 저장됩니다 (새로고침해도 유지)</li>
           </ul>
@@ -290,7 +295,7 @@
           <h3 class="font-bold text-slate-900 mb-2 flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-amber-500 text-white text-xs flex items-center justify-center font-bold">5</span> 저장하기</h3>
           <ul class="ml-8 space-y-1 text-slate-600 list-disc list-inside">
             <li><b>PPTX 다운로드</b>: PowerPoint에서 열리는 파일 (텍스트 수정 가능)</li>
-            <li><b>PDF 저장</b>: 인쇄 창에서 "PDF로 저장" 선택</li>
+            <li><b>PDF 저장</b>: 인쇄 창에서 "PDF로 저장" 선택 (화면 비율과 같은 비율로 저장)</li>
             <li><b>이미지 저장</b>: 슬라이드에 마우스를 올리면 개별 이미지 저장 가능</li>
           </ul>
         </div>
@@ -313,6 +318,7 @@
     lucide.createIcons();
 
     // Configuration Data Arrays (Expanded to exactly 15 options each)
+
 
 
 
@@ -386,6 +392,10 @@
         title: document.getElementById('sermon-title'),
         speaker: document.getElementById('sermon-speaker'),
         content: document.getElementById('sermon-content'),
+        btnScriptureImage: document.getElementById('btn-scripture-image'),
+        btnImageSmaller: document.getElementById('btn-image-smaller'),
+        btnImageBigger: document.getElementById('btn-image-bigger'),
+        scriptureImageInput: document.getElementById('scripture-image-input'),
         themeSel: document.getElementById('theme-selector'),
         aspectSel: document.getElementById('aspect-selector'),
         stage: document.getElementById('slide-stage'),
@@ -408,7 +418,7 @@
     };
 
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-    const escapeHtml = (t) => t ? t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&quot;") : "";
+    const escapeHtml = (t) => t ? t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;") : "";
 
     function showToast(msg, type='info', duration=4000) {
       const c = document.getElementById('toast-container');
@@ -516,17 +526,14 @@
       document.getElementById('btn-align-right').addEventListener('click', () => setTextAlign('right'));
 
       // Scripture layout selector
-      document.getElementById('scripture-layout-selector').addEventListener('change', (e) => {
-        const current = state.slides[state.currentSlideIndex];
-        if (current && current.type === 'scripture') {
-          pushHistory();
-          current.scriptureLayout = e.target.value;
-          renderAll();
-          saveWork();
-        } else {
-          showToast("성경구절 슬라이드를 선택해주세요.", "error");
-          e.target.value = "full";
-        }
+      document.getElementById('scripture-layout-selector').addEventListener('change', (e) => setScriptureLayout(e.target.value));
+      if (els.btnScriptureImage) els.btnScriptureImage.addEventListener('click', openScriptureImagePicker);
+      if (els.btnImageSmaller) els.btnImageSmaller.addEventListener('click', () => adjustImageScale(-10));
+      if (els.btnImageBigger) els.btnImageBigger.addEventListener('click', () => adjustImageScale(10));
+      if (els.scriptureImageInput) els.scriptureImageInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        e.target.value = '';
+        if (file) handleScriptureImageFile(file);
       });
       els.btnPrev.addEventListener('click', () => navigateSlide(-1));
       els.btnNext.addEventListener('click', () => navigateSlide(1));
@@ -587,6 +594,7 @@
 
     // Auto-save / restore (slides, theme, aspect, title, speaker)
     // Note: API key is stored separately under 'gemini_api_key'
+    let saveWorkNoticeShown = false;
     function saveWork() {
       try {
         localStorage.setItem('graceslide_work', JSON.stringify({
@@ -596,7 +604,20 @@
           title: els.title.value,
           speaker: els.speaker.value
         }));
-      } catch(e) { /* storage full */ }
+      } catch(e) {
+        // 이미지(base64)가 많아 용량을 초과하면 이미지만 제외하고 저장
+        try {
+          localStorage.setItem('graceslide_work', JSON.stringify({
+            slides: state.slides.map(s => s.image ? { ...s, image: null } : s),
+            theme: state.theme,
+            aspect: state.aspect,
+            title: els.title.value,
+            speaker: els.speaker.value,
+            imagesOmitted: true
+          }));
+          if (!saveWorkNoticeShown) { saveWorkNoticeShown = true; showToast("자동 저장 용량이 커서 이미지를 제외하고 저장했습니다."); }
+        } catch(e2) { /* storage full */ }
+      }
     }
 
     function restoreWork() {
@@ -605,7 +626,14 @@
         if (saved) {
           const data = JSON.parse(saved);
           if (data.slides && data.slides.length > 0) {
-            state.slides = data.slides;
+            state.slides = data.slides.map(s => {
+                // 이미지 제외 저장본: 빈 이미지 슬라이드는 성경 안내 슬라이드로 변환 (빈 화면 방지)
+                if (s.image === null && s.type !== 'scripture' && s.type !== 'title') {
+                    return { type: 'scripture', heading: '이미지 제외됨', reference: '', verseContent: s.verseContent || '' };
+                }
+                return s;
+            });
+            if (data.imagesOmitted) showToast("용량 문제로 이미지 일부는 제외하고 불러왔습니다.");
             state.theme = data.theme || 'cinematic_dark';
             state.aspect = data.aspect || '16x9';
             els.themeSel.value = state.theme;
@@ -678,13 +706,27 @@
       if (!current) return;
 
       const isLongText = (current.verseContent || '').length > 80;
-      const textSize = current.textSize || 'md';
-      const sizeMap = {
-        sm: isLongText ? 'text-xl sm:text-2xl lg:text-3xl' : 'text-2xl sm:text-3xl lg:text-4xl',
-        md: isLongText ? 'text-2xl sm:text-3xl lg:text-4xl' : 'text-3xl sm:text-4xl lg:text-5xl',
-        lg: isLongText ? 'text-3xl sm:text-4xl lg:text-5xl' : 'text-4xl sm:text-5xl lg:text-6xl'
-      };
-      const fontPt = sizeMap[textSize] || sizeMap.md;
+      // 글씨 크기 단계: 숫자 그대로, 예전 이름(xs/sm/md/lg/xl)은 숫자로 변환 (-2/-1/0/1/2).
+      // -2~2단계는 기존 클래스 그대로, 그 밖은 1.25배씩 이어지는 px 크기로 무제한 확장.
+      const TEXT_SIZE_LEVELS = { xs: -2, sm: -1, md: 0, lg: 1, xl: 2 };
+      const textSizeRaw = current.textSize;
+      const textLevel = typeof textSizeRaw === 'number' ? textSizeRaw : (TEXT_SIZE_LEVELS[textSizeRaw] ?? 0);
+      const PX_CLASS = { 16: 'text-base', 18: 'text-lg', 20: 'text-xl', 24: 'text-2xl', 30: 'text-3xl', 36: 'text-4xl', 48: 'text-5xl', 60: 'text-6xl', 72: 'text-7xl' };
+      const sizeTriples = isLongText
+        ? { '-2': [16, 18, 20], '-1': [20, 24, 30], '0': [24, 30, 36], '1': [30, 36, 48], '2': [36, 48, 60] }
+        : { '-2': [18, 20, 24], '-1': [24, 30, 36], '0': [30, 36, 48], '1': [36, 48, 60], '2': [48, 60, 72] };
+      let fontPt;
+      if (textLevel >= -2 && textLevel <= 2) {
+        const [b, s, l] = sizeTriples[String(textLevel)];
+        fontPt = `${PX_CLASS[b]} sm:${PX_CLASS[s]} lg:${PX_CLASS[l]}`;
+      } else {
+        const anchorKey = textLevel < -2 ? '-2' : '2';
+        const dist = textLevel < -2 ? (-2 - textLevel) : (textLevel - 2);
+        const f = Math.pow(1.25, dist);
+        const [b, s, l] = sizeTriples[anchorKey].map(v => textLevel < -2 ? v / f : v * f);
+        const r = v => Math.round(v * 10) / 10;
+        fontPt = `text-[${r(b)}px] sm:text-[${r(s)}px] lg:text-[${r(l)}px]`;
+      }
       
       // TITLE SLIDE
       if (current.type === 'title') {
@@ -705,7 +747,7 @@
 
         const scriptureContent = `
             <div class="flex flex-col ${current.textAlign === 'left' ? 'items-start' : (current.textAlign === 'right' ? 'items-end' : 'items-center')} gap-3">
-              <span class="px-4 py-1.5 rounded-full text-sm font-bold border" style="color:#FF3333; background-color:#${pal.accent}; border-color:#${pal.accent}">
+              <span class="px-5 py-2 rounded-full text-xl font-bold border" style="color:#FF3333; background-color:#${pal.accent}; border-color:#${pal.accent}">
                 ${escapeHtml(current.heading || '본문 말씀')}
               </span>
               <div class="text-2xl font-bold border-b-2 pb-3 px-8 tracking-wider mt-2" style="border-color:rgba(150,150,150,0.3); color:${refColor};">
@@ -732,18 +774,25 @@
               ${scriptureContent}
             </div>
           `;
-          const imgSide = `
-            <div class="w-1/2 h-full flex items-center justify-center border-2 border-dashed rounded-xl m-4" style="border-color:rgba(150,150,150,0.4); background-color:rgba(150,150,150,0.05);">
+          const imgScale = current.imageScale ?? 100;
+          const imgSide = current.image ? `
+            <div id="scripture-img-box" class="w-1/2 h-full rounded-xl m-4 cursor-pointer flex items-center justify-center overflow-hidden" title="클릭해서 그림 바꾸기">
+              <img src="${current.image}" class="shrink-0 object-contain" style="width: ${imgScale}%; height: ${imgScale}%; max-width: none; max-height: none;" alt="">
+            </div>
+          ` : `
+            <div id="scripture-img-box" class="w-1/2 h-full flex items-center justify-center border-2 border-dashed rounded-xl m-4 cursor-pointer" style="border-color:rgba(150,150,150,0.4); background-color:rgba(150,150,150,0.05);" title="클릭해서 그림 넣기">
               <div class="text-center opacity-50">
                 <i data-lucide="image-plus" class="w-12 h-12 mx-auto mb-2"></i>
                 <p class="text-sm font-medium">이미지 자리</p>
-                <p class="text-xs">PPT에서 사진 넣으세요</p>
+                <p class="text-xs">클릭해서 그림 넣기</p>
               </div>
             </div>
           `;
           els.stageInner.className = "w-full h-full flex z-10";
           els.stageInner.innerHTML = isLeftText ? textSide + imgSide : imgSide + textSide;
           lucide.createIcons({ root: els.stageInner });
+          const imgBox = els.stageInner.querySelector('#scripture-img-box');
+          if (imgBox) imgBox.addEventListener('click', openScriptureImagePicker);
         }
       }
       // IMAGE SLIDES
@@ -1362,11 +1411,42 @@ ${text}`;
     // ===== Undo/Redo History =====
     const history = { stack: [], index: -1, max: 50 };
 
+    // 이미지 원본은 한 번만 보관하고, 실행 취소 기록에는 참조만 저장 (기록이 무거워지는 것 방지)
+    const imageStore = {};       // id -> data URL
+    const imageIdByData = {};    // data URL -> id
+    let imageSeq = 0;
+    function storeImage(dataUrl) {
+        if (!dataUrl) return null;
+        let id = imageIdByData[dataUrl];
+        if (!id) { id = 'img' + (++imageSeq); imageStore[id] = dataUrl; imageIdByData[dataUrl] = id; }
+        return id;
+    }
+    function slidesToSnapshot(slides) {
+        return slides.map(s => s.image ? { ...s, image: { __img: storeImage(s.image) } } : s);
+    }
+    function slidesFromSnapshot(slides) {
+        return slides.map(s => (s.image && s.image.__img) ? { ...s, image: imageStore[s.image.__img] || null } : s);
+    }
+    function pruneImageStore() {
+        const used = new Set();
+        for (const entry of history.stack) {
+            try {
+                const s = JSON.parse(entry);
+                s.slides.forEach(sl => { if (sl.image && sl.image.__img) used.add(sl.image.__img); });
+            } catch(e) {}
+        }
+        state.slides.forEach(sl => { if (sl.image) { const id = imageIdByData[sl.image]; if (id) used.add(id); } });
+        for (const id of Object.keys(imageStore)) {
+            if (!used.has(id)) { const data = imageStore[id]; delete imageStore[id]; delete imageIdByData[data]; }
+        }
+    }
+
     function pushHistory() {
         history.stack = history.stack.slice(0, history.index + 1);
-        history.stack.push(JSON.stringify({ slides: state.slides, idx: state.currentSlideIndex }));
+        history.stack.push(JSON.stringify({ slides: slidesToSnapshot(state.slides), idx: state.currentSlideIndex }));
         if (history.stack.length > history.max) history.stack.shift();
         history.index = history.stack.length - 1;
+        pruneImageStore();
         updateUndoButtons();
     }
 
@@ -1374,7 +1454,7 @@ ${text}`;
         if (history.index > 0) {
             history.index--;
             const s = JSON.parse(history.stack[history.index]);
-            state.slides = s.slides;
+            state.slides = slidesFromSnapshot(s.slides);
             state.currentSlideIndex = Math.min(s.idx, state.slides.length - 1);
             renderAll();
             saveWork();
@@ -1387,7 +1467,7 @@ ${text}`;
         if (history.index < history.stack.length - 1) {
             history.index++;
             const s = JSON.parse(history.stack[history.index]);
-            state.slides = s.slides;
+            state.slides = slidesFromSnapshot(s.slides);
             state.currentSlideIndex = Math.min(s.idx, state.slides.length - 1);
             renderAll();
             saveWork();
@@ -1437,40 +1517,60 @@ ${text}`;
         return result;
     }
 
-    // ===== Font size adjustment =====
-    const TEXT_SIZES = ['sm', 'md', 'lg'];
+    // ===== Scripture image size adjustment (자유 크기: 10%씩, 크게는 제한 없음) =====
+    function adjustImageScale(step) {
+        const current = state.slides[state.currentSlideIndex];
+        if (!current || current.type !== 'scripture') {
+            showToast("성경구절 슬라이드를 선택해주세요.", "error");
+            return;
+        }
+        const prev = current.imageScale ?? 100;
+        const scale = Math.max(0, prev + step);
+        current.imageScale = scale;
+        renderAll();
+        pushHistory();
+        saveWork();
+        showToast(`사진 크기: ${scale}%`);
+    }
+
+    // ===== Font size adjustment (무제한: 상한·하한 없음) =====
+    const TEXT_SIZE_LEVELS = { xs: -2, sm: -1, md: 0, lg: 1, xl: 2 };
+    function textSizeLevel(slide) {
+        const v = slide ? slide.textSize : undefined;
+        if (typeof v === 'number') return v;
+        if (v in TEXT_SIZE_LEVELS) return TEXT_SIZE_LEVELS[v];
+        return 0;
+    }
     function adjustFontSize(dir) {
         const slide = state.slides[state.currentSlideIndex];
         if (!slide) return;
-        const cur = TEXT_SIZES.indexOf(slide.textSize || 'md');
-        const next = Math.min(2, Math.max(0, cur + dir));
-        if (next === cur) return showToast(dir > 0 ? "이미 가장 큰 글자입니다." : "이미 가장 작은 글자입니다.");
+        const level = textSizeLevel(slide) + dir;
         pushHistory();
-        slide.textSize = TEXT_SIZES[next];
+        slide.textSize = level;
         renderAll();
         saveWork();
-        showToast(`글자 크기: ${next === 0 ? '작게' : next === 1 ? '보통' : '크게'}`);
+        showToast(level === 0 ? "글자 크기: 보통" : level > 0 ? `글자 크기: 보통보다 ${level}단계 크게` : `글자 크기: 보통보다 ${-level}단계 작게`);
     }
 
     // ===== PDF export (via browser print) =====
     function exportToPDF() {
         if (state.slides.length === 0) return showToast("내보낼 슬라이드가 없습니다.", "error");
-        // 인쇄용 스타일 추가
+        // 인쇄용 스타일 추가 (화면 비율 16:9/4:3에 따라 매번 갱신)
         let printStyle = document.getElementById('print-pdf-style');
         if (!printStyle) {
             printStyle = document.createElement('style');
             printStyle.id = 'print-pdf-style';
-            printStyle.textContent = `
-              @media print {
-                body * { visibility: hidden; }
-                #print-pdf-area, #print-pdf-area * { visibility: visible; }
-                #print-pdf-area { position: absolute; left: 0; top: 0; width: 100%; }
-                .pdf-page { page-break-after: always; width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden; }
-                .pdf-page:last-child { page-break-after: avoid; }
-              }
-            `;
             document.head.appendChild(printStyle);
         }
+        printStyle.textContent = `
+          @media print {
+            body * { visibility: hidden; }
+            #print-pdf-area, #print-pdf-area * { visibility: visible; }
+            #print-pdf-area { position: absolute; left: 0; top: 0; width: 100%; }
+            .pdf-page { page-break-after: always; width: 100%; aspect-ratio: ${state.aspect === '4x3' ? '4/3' : '16/9'}; position: relative; overflow: hidden; }
+            .pdf-page:last-child { page-break-after: avoid; }
+          }
+        `;
         // 현재 스테이지 렌더링을 이용해 각 슬라이드를 인쇄 영역에 복제
         const savedIdx = state.currentSlideIndex;
         const area = document.createElement('div');
@@ -1514,6 +1614,48 @@ ${text}`;
             icon.classList.remove('hidden');
             textEl.textContent = text;
         }
+    }
+
+    // 성경 레이아웃 적용: 레이아웃만 변경 (그림은 각 슬라이드 고유, 다른 슬라이드에 적용 안 됨)
+    function setScriptureLayout(value) {
+        const current = state.slides[state.currentSlideIndex];
+        if (current && current.type === 'scripture') {
+            current.scriptureLayout = value;
+            renderAll();
+            pushHistory();
+            saveWork();
+        } else {
+            showToast("성경구절 슬라이드를 선택해주세요.", "error");
+            const sel = document.getElementById('scripture-layout-selector');
+            if (sel) sel.value = "full";
+        }
+    }
+
+    // 성경 이미지칸 그림 불러오기: 불러온 그림은 그 슬라이드에만 적용 (다른 슬라이드에는 적용 안 됨)
+    function openScriptureImagePicker() {
+        if (els.scriptureImageInput) els.scriptureImageInput.click();
+    }
+
+    function handleScriptureImageFile(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            const current = state.slides[state.currentSlideIndex];
+            if (!current || current.type !== 'scripture') {
+                showToast("성경구절 슬라이드를 선택해주세요.", "error");
+                return;
+            }
+            current.image = reader.result;
+            renderAll();
+            pushHistory();
+            saveWork();
+            if (current.scriptureLayout === 'left_text' || current.scriptureLayout === 'right_text') {
+                showToast("그림을 이미지칸에 넣었습니다.", "success");
+            } else {
+                showToast("그림을 불러왔습니다. 분할 레이아웃을 선택하면 이미지칸에 표시됩니다.", "success");
+            }
+        };
+        reader.readAsDataURL(file);
     }
 
     async function exportToPPTX() {
@@ -1567,24 +1709,33 @@ ${text}`;
                     const bodyFont = slide.bodyFont || 'Noto Serif KR';
                     const align = slide.textAlign === 'left' ? 'left' : (slide.textAlign === 'right' ? 'right' : 'center');
                     const layout = slide.scriptureLayout || 'full';
-                    const pptFontSize = slide.textSize === 'sm' ? 20 : (slide.textSize === 'lg' ? 32 : 26);
+                    const pptFontSize = Math.max(6, 26 + textSizeLevel(slide) * 6);
 
                     let tx, tw;
                     if (layout === 'full') {
                         tx = 1.0; tw = 8.0;
                     } else if (layout === 'left_text') {
                         tx = 0.5; tw = 4.2;
-                        s.addShape(pptx.shapes.RECTANGLE, { x: 5.2, y: 0.5, w: 4.3, h: 4.6, fill: { color: pal.bg }, line: { color: '888888', width: 1, dashType: 'dash' } });
-                        s.addText('이미지 자리\n(PPT에서 사진 넣으세요)', { x: 5.2, y: 2.0, w: 4.3, h: 1.6, fontSize: 14, color: '888888', align: 'center', valign: 'middle', fontFace: '맑은 고딕' });
+                        if (slide.image) {
+                            s.addImage({ path: slide.image, x: 5.2, y: 0.5, w: 4.3, h: 4.6, sizing: { type: (slide.imageScale ?? 100) <= 100 ? 'contain' : 'cover' } });
+                        } else {
+                            s.addShape(pptx.shapes.RECTANGLE, { x: 5.2, y: 0.5, w: 4.3, h: 4.6, fill: { color: pal.bg }, line: { color: '888888', width: 1, dashType: 'dash' } });
+                            s.addText('이미지 자리', { x: 5.2, y: 2.0, w: 4.3, h: 1.6, fontSize: 14, color: '888888', align: 'center', valign: 'middle', fontFace: '맑은 고딕' });
+                        }
                     } else {
                         tx = 5.3; tw = 4.2;
-                        s.addShape(pptx.shapes.RECTANGLE, { x: 0.5, y: 0.5, w: 4.3, h: 4.6, fill: { color: pal.bg }, line: { color: '888888', width: 1, dashType: 'dash' } });
-                        s.addText('이미지 자리\n(PPT에서 사진 넣으세요)', { x: 0.5, y: 2.0, w: 4.3, h: 1.6, fontSize: 14, color: '888888', align: 'center', valign: 'middle', fontFace: '맑은 고딕' });
+                        if (slide.image) {
+                            s.addImage({ path: slide.image, x: 0.5, y: 0.5, w: 4.3, h: 4.6, sizing: { type: (slide.imageScale ?? 100) <= 100 ? 'contain' : 'cover' } });
+                        } else {
+                            s.addShape(pptx.shapes.RECTANGLE, { x: 0.5, y: 0.5, w: 4.3, h: 4.6, fill: { color: pal.bg }, line: { color: '888888', width: 1, dashType: 'dash' } });
+                            s.addText('이미지 자리', { x: 0.5, y: 2.0, w: 4.3, h: 1.6, fontSize: 14, color: '888888', align: 'center', valign: 'middle', fontFace: '맑은 고딕' });
+                        }
                     }
 
-                    const badgeWidth = Math.max(2.0, Math.min(4.5, headingText.length * 0.22 + 1.0));
+                    const badgeMaxW = layout === 'full' ? 6.5 : 4.2;
+                    const badgeWidth = Math.max(2.0, Math.min(badgeMaxW, headingText.length * 0.26 + 1.0));
                     const badgeX = layout === 'full' ? (10 - badgeWidth) / 2 : (tx + (tw - badgeWidth) / 2);
-                    s.addText(headingText, { x: badgeX, y: 0.5, w: badgeWidth, h: 0.45, fontSize: 13, color: 'FF3333', bold: true, align: 'center', valign: 'middle', fontFace: '맑은 고딕', fill: { color: pal.accent } });
+                    s.addText(headingText, { x: badgeX, y: 0.5, w: badgeWidth, h: 0.6, fontSize: 18, color: 'FF3333', bold: true, align: 'center', valign: 'middle', fontFace: '맑은 고딕', fill: { color: pal.accent } });
                     s.addText(refText, { x: tx, y: 1.15, w: tw, h: 0.7, fontSize: 26, color: pal.accent, bold: true, align: align, valign: 'middle', fontFace: '맑은 고딕' });
                     const lineW = 2.0;
                     const lineX = align === 'left' ? tx : (align === 'right' ? tx + tw - lineW : tx + (tw - lineW) / 2);
