@@ -1981,7 +1981,7 @@ ${text}`;
     if (!window.crypto || !crypto.subtle) { err.style.display = 'block'; err.textContent = '보안 연결(https)에서만 열 수 있습니다.'; return; }
     crypto.subtle.digest('SHA-256', new TextEncoder().encode(val)).then(function(buf){
       var h = hex(buf);
-      if (h === 'bec9840d05478fabb60a9b95965686b1b17c6261bc2d458c1138f381326391d4' || h === 'ff5a1ae012afa5d4c889c50ad427aaf545d31a4fac04ffc1c4d03d403ba4250a') {
+      if (h === 'bec9840d05478fabb60a9b95965686b1b17c6261bc2d458c1138f381326391d4' || h === '90b0ce469fbd8e30a2862bb24d562dc641c534a9b43c7c33c25cfaefe25e5e47') {
         try { localStorage.setItem(KEY, '1'); } catch(e) {}
         document.body.style.overflow = '';
         var el = document.getElementById('pastor-app-lock'); if (el) el.remove();
